@@ -1,0 +1,42 @@
+version: '2.1'
+
+services:
+  fe:
+    image: novyl/jtl-reporter-fe
+    ports:
+     - "2020:80"
+    depends_on:
+      - db
+      - be
+
+  db:
+    image: jtl-reporter-db
+    build:
+      context: ./db/
+      dockerfile: Dockerfile
+    volumes:
+      - ./data/jtl_report:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    ports:
+      - "5432:5432"
+
+  be:
+    image: novyl/jtl-reporter-be
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=db
+
+  migration:
+    image: novyl/jtl-reporter-be:latest
+    environment:
+        - DATABASE_URL=postgres://postgres@db/jtl_report
+    command: npm run migrate up
+    depends_on:
+      db:
+        condition: service_healthy
+
