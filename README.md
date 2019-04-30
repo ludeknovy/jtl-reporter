@@ -12,3 +12,7 @@
   ```
   $ http://IP_ADDRESS:2020
   ```
+### Repositories structure
+ JtlReporter consists of the following parts:
+  * [backend](https://github.com/ludeknovy/jtl-reporter-be)
+  * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
