@@ -10,7 +10,7 @@ services:
       - be
 
   db:
-    image: jtl-reporter-db
+    image: novyl/jtl-reporter-db
     build:
       context: ./db/
       dockerfile: Dockerfile
