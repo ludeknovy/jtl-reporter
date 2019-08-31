@@ -16,3 +16,8 @@
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
   * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
+
+
+## Screenshot
+![Item detail](/screenshots/item_detail.jpeg)
+
