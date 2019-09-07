@@ -1,3 +1,6 @@
+## Description
+ Reporting tool for JMeter/[Taurus](https://gettaurus.org) load tests.
+
 ## Installation steps
 1. Install [Docker](https://docs.docker.com/engine/installation/) ([Engine](https://docs.docker.com/engine/installation/), [Compose](https://docs.docker.com/compose/install/))
 2. Clone this repository and navigate into cloned folder
