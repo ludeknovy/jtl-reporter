@@ -24,3 +24,5 @@
 ## Screenshot
 ![Item detail](/screenshots/item_detail.jpeg)
 
+## License
+Jtl Reporter is [GPL-3.0 licensed.](LICENSE)  
