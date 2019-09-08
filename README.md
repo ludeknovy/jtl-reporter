@@ -43,6 +43,8 @@ services:
 ```
 Do not forget to copy [upload_jtl.py](/scripts/upload_jtl.py) script into your project folder.
 
+Launch your test and after it finishes it will upload .jtl file(s) into Jtl Reporter automatically.
+
 Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
 
 ## Repositories structure
