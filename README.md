@@ -16,6 +16,35 @@
   $ http://IP_ADDRESS:2020
   ```
 
+## Taurus integration
+Jtl Reporter can be easily integrated with Taurus. To do it we are going to use [shell exec module](https://gettaurus.org/docs/ShellExec/) and custom python upload script. Here is an example of test yaml configuration:
+```
+settings:
+  env:
+    BASE_URL: yourBaseUrl.com
+    SCENARIO: demoScenario
+    PROJECT: demoProject
+execution:
+  concurrency: 50
+  ramp-up: 3m
+  hold-for: 30m
+  scenario: demoScenario
+
+scenarios:
+  demoScenario:
+    script: jmx/demo.jmx
+    variables:
+      baseUrl: ${BASE_URL}
+
+services:
+ - module: shellexec
+   post-process:
+   - python $PWD/helper/upload_jtl.py -p ${PROJECT} -s ${SCENARIO} -e ${BASE_URL} -ec $TAURUS_EXIT_CODE -er "${TAURUS_STOPPING_REASON:-''}"
+```
+Do not forget to copy [upload_jtl.py](/scripts/upload_jtl.py) script into your project folder.
+
+Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
+
 ## Repositories structure
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
