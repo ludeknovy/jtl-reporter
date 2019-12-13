@@ -16,6 +16,13 @@
   $ http://IP_ADDRESS:2020
   ```
 
+5. Default credentials
+
+  ```
+  username: admin
+  password: 2Txnf5prDknTFYTVEXjj
+  ```
+
 ## Taurus integration
 Jtl Reporter can be easily integrated with Taurus. To do it we are going to use [shell exec module](https://gettaurus.org/docs/ShellExec/) and custom python upload script. Here is an example of test yaml configuration:
 ```

@@ -17,6 +17,9 @@ parser.add_argument("-p", "--project",
 parser.add_argument("-e", "--environment",
                     dest="environment", required=True,
                     help="environment")
+parser.add_argument("-host", "--hostname",
+                    dest="hostname", required=False,
+                    help="hostname")
 parser.add_argument("-ec", "--exit-code",
                     dest="exit_code", required=False,
                     help="exit code")
@@ -43,7 +46,11 @@ files = dict(
     note=(None, get_note(args.exit_reason))
 )
 
+if (os.path.exists(latest_folder + '/monitoring_logs.csv')):
+    logs = open(latest_folder + '/monitoring_logs.csv', 'rb')
+    files['monitoring'] = logs
+
 url = '<jtl-reporter-base-url:port>/api/projects/%s/scenarios/%s/items' % (
     args.project, args.scenario)
 
-r = requests.post(url, files=files)
+r = requests.post(url, files=files, headers={'x-access-token': 'yourApiToken'})
