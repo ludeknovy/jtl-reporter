@@ -61,7 +61,7 @@ Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter 
 
 
 ## Screenshot
-![Item detail](/screenshots/item_detail.jpeg)
+![Item detail](/screenshots/item_detail.png)
 
 ## License
 Jtl Reporter is [GPL-3.0 licensed.](LICENSE)  
