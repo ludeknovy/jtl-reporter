@@ -22,8 +22,8 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-    ports:
-      - "5432:5432"
+    environment:
+      - POSTGRES_HOST_AUTH_METHOD=trust
 
   mongodb:
     image: mongo:4.2.5-bionic
@@ -35,7 +35,6 @@ services:
       - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     ports: 
       - "27020:27017"
-
 
   be:
     image: novyl/jtl-reporter-be
