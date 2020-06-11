@@ -37,12 +37,25 @@ services:
       - "27020:27017"
 
 
+  mongodb:
+    image: mongo:4.2.5-bionic
+    container_name: jtl-reporter-mongodb
+    environment:
+      - MONGO_INITDB_DATABASE=jtl-data
+    volumes: 
+      - ./data/jtl_report_mongo:/data/db
+      - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
+    ports: 
+      - "27020:27017"
+
+
   be:
     image: novyl/jtl-reporter-be
     ports:
       - "5000:5000"
     environment:
       - DB_HOST=db
+      - MONGO_CONNECTION_STRING=mongodb://mongodb
 
   migration:
     image: novyl/jtl-reporter-be:latest
