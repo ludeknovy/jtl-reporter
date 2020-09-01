@@ -1,6 +1,8 @@
 ## Description
  Reporting tool for [Taurus](https://gettaurus.org)(JMeter) load tests. Jtl Reporter is meant to be used as addition to Grafana perf stack. While Grafana provides great solution for live data preview it falls short of easy test run retrospective. Jtl Reporter's main objective is to give you the possibility compare test runs with ease.
 
+More on [medium blog](https://medium.com/@novyludek/jmeter-reports-with-jtl-reporter-and-taurus-d4798a237122)
+
 ## Installation steps
 1. Install [Docker](https://docs.docker.com/engine/installation/) ([Engine](https://docs.docker.com/engine/installation/), [Compose](https://docs.docker.com/compose/install/))
 2. Clone this repository and navigate into cloned folder
