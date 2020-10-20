@@ -56,6 +56,18 @@ Launch your test and after it finishes it will upload .jtl file(s) into Jtl Repo
 
 Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
 
+## Uploading large JTL file
+If you plan to upload large JTL file, you need to change mongo settings like this:
+```
+let newLimit = 1000 * 1024 * 1024;
+db.adminCommand({setParameter: 1, internalQueryMaxPushBytes: newLimit});
+```
+
+Otherwise mongo will throw error like this:
+```
+MongoError: $push used too much memory and cannot spill to disk. Memory limit: 104857600 bytes",
+```
+
 ## Repositories structure
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
