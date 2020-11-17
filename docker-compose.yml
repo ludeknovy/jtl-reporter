@@ -42,7 +42,7 @@ services:
       - "5000:5000"
     environment:
       - DB_HOST=db
-      - MONGO_CONNECTION_STRING=mongodb://mongodb
+      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
 
   migration:
     image: novyl/jtl-reporter-be:latest
