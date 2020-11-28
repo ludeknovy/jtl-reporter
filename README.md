@@ -56,6 +56,24 @@ Launch your test and after it finishes it will upload .jtl file(s) into Jtl Repo
 
 Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
 
+## Locust.io integration
+Download [jtl_listener.py](/scripts/jtl_listener.py) into your locust project folder.
+
+Register the listener in your locust test by placing event listener at the very end of the file:
+```
+from jtl_listener import JtlListener
+
+...
+
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+    JtlListener(env=environment)
+```
+
+After the test finishes you will find a jtl file in `logs` folder. 
+
+Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.
+
 ## Uploading large JTL file
 If you plan to upload large JTL file, you need to change mongo settings like this:
 ```
