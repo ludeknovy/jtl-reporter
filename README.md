@@ -1,3 +1,5 @@
+<h1 align="center">JtlReporter</h1>
+
 ![jtl gif](/assets/jtl.gif)
 
 ## Description
