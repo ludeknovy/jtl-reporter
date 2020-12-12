@@ -1,3 +1,5 @@
+![jtl gif](/assets/jtl.git)
+
 ## Description
  Reporting tool for [Taurus](https://gettaurus.org)(JMeter) load tests. Jtl Reporter is meant to be used as addition to Grafana perf stack. While Grafana provides great solution for live data preview it falls short of easy test run retrospective. Jtl Reporter's main objective is to give you the possibility compare test runs with ease.
 
@@ -93,7 +95,7 @@ MongoError: $push used too much memory and cannot spill to disk. Memory limit: 1
 
 
 ## Screenshot
-![Item detail](/screenshots/item_detail.png)
+![Item detail](/assets/item_detail.png)
 
 ## License
 Jtl Reporter is [GPL-3.0 licensed.](LICENSE)  
