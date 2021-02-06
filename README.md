@@ -76,7 +76,7 @@ def on_locust_init(environment, **_kwargs):
 
 After the test finishes you will find a jtl file in `logs` folder. 
 
-Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.
+~~Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.~~
 
 ## Uploading large JTL file
 If you plan to upload large JTL file, you need to change mongo settings like this:
