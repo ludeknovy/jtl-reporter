@@ -94,6 +94,7 @@ MongoError: $push used too much memory and cannot spill to disk. Memory limit: 1
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
   * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
+  * [listener](https://github.com/ludeknovy/jtl-reporter-listener-service)
 
 
 ## Screenshot
