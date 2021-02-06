@@ -61,6 +61,10 @@ Launch your test and after it finishes it will upload .jtl file(s) into Jtl Repo
 Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
 
 ## Locust.io integration
+
+You have two options here - generate JTL file and upload it to the application, or use JTL listener service and upload the results continuous while running your test.
+
+### Generating and uploading JTL file
 Download [jtl_listener.py](/scripts/jtl_listener.py) into your locust project folder.
 
 Register the listener in your locust test by placing event listener at the very end of the file:
@@ -71,14 +75,40 @@ from jtl_listener import JtlListener
 
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
-    JtlListener(env=environment,  project_name="<project name>",
-                scenario_name="<scenario name>",
-                environment="<tested envitonment>")
+    JtlListener(env=environment,  project_name="project name",
+                scenario_name="scenario name",
+                environment="tested envitonment"
+                backend_url="http://IP_ADDRESS")
 ```
+
+Generate api token in the application and set it as `JTL_API_TOKEN` env variable.
 
 After the test finishes you will find a jtl file in `logs` folder. 
 
 ~~Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.~~
+
+
+### Continuous results uploading
+Download [jtl_listener_service.py](/scripts/jtl_listener_service.py) into your locust project folder.
+
+Register the listener in your locust test by placing event listener at the very end of the file:
+```
+from jtl_listener_service import JtlListener
+
+...
+
+@events.init.add_listener
+def on_locust_init(environment, **_kwargs):
+    JtlListener(env=environment,  project_name="project name",
+                scenario_name="scenario name",
+                environment="tested envitonment",
+                hostname="hostname",
+                backend_url="http://IP_ADDRESS")
+```
+
+Generate api token in the application and set it as `JTL_API_TOKEN` env variable.
+
+Once you run your test, the plugin will start uploading results to [jtl listener service](https://github.com/ludeknovy/jtl-reporter-listener-service).
 
 ## Uploading large JTL file
 If you plan to upload large JTL file, you need to change mongo settings like this:

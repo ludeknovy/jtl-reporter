@@ -18,6 +18,7 @@ class JtlListener:
             project_name: str,
             scenario_name: str,
             environment: str,
+            backed_url: str,
             field_delimiter=",",
             row_delimiter="\n",
             timestamp_format="%Y-%m-%d %H:%M:%S",
@@ -39,6 +40,7 @@ class JtlListener:
         self.project_name = project_name
         self.scenario_name = scenario_name
         self.environment = environment
+        self.backed_url = backed_url
 
         # fields set by default in jmeter
         self.csv_headers = [
@@ -117,8 +119,8 @@ class JtlListener:
             kpi=open('logs/' + self.filename, 'rb'),
             environment=(None, self.environment),
             status=(None, 1))
-        url = '<jtl-url>/api/projects/%s/scenarios/%s/items' % (
-            self.project_name, self.scenario_name)
+        url = '%s:5000/api/projects/%s/scenarios/%s/items' % (
+            self.backed_url, self.project_name, self.scenario_name)
         print(files)
         response = requests.post(url, files=files, headers={
                                  'x-access-token': self.api_token})
