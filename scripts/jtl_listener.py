@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import time, sleep
 from pathlib import Path
+import os
 import requests
 
 
@@ -14,15 +15,13 @@ class JtlListener:
     def __init__(
             self,
             env,
+            project_name: str,
+            scenario_name: str,
+            environment: str,
             field_delimiter=",",
             row_delimiter="\n",
             timestamp_format="%Y-%m-%d %H:%M:%S",
             flush_size=100,
-            api_token=None,
-            project_name=None,
-            scenario_name=None,
-            environment=None
-
     ):
         self.env = env
         self.runner = self.env.runner
@@ -36,7 +35,7 @@ class JtlListener:
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
 
-        self.api_token = api_token
+        self.api_token = os.environ['JTL_API_TOKEN']
         self.project_name = project_name
         self.scenario_name = scenario_name
         self.environment = environment
