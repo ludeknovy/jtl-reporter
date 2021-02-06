@@ -1,10 +1,11 @@
 from datetime import datetime
-from time import sleep, time
+from time import time, sleep
 from pathlib import Path
+import os
+import requests
 
 
 class JtlListener:
-
     # holds results until processed
     csv_results = []
     master_csv_data = None
@@ -12,12 +13,15 @@ class JtlListener:
     filename = None
 
     def __init__(
-        self,
-        env,
-        field_delimiter=",",
-        row_delimiter="\n",
-        timestamp_format="%Y-%m-%d %H:%M:%S",
-        flush_size=100,
+            self,
+            env,
+            project_name: str,
+            scenario_name: str,
+            environment: str,
+            field_delimiter=",",
+            row_delimiter="\n",
+            timestamp_format="%Y-%m-%d %H:%M:%S",
+            flush_size=100,
     ):
         self.env = env
         self.runner = self.env.runner
@@ -30,6 +34,11 @@ class JtlListener:
         self.flush_size = flush_size
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
+
+        self.api_token = os.environ['JTL_API_TOKEN']
+        self.project_name = project_name
+        self.scenario_name = scenario_name
+        self.environment = environment
 
         # fields set by default in jmeter
         self.csv_headers = [
@@ -50,7 +59,6 @@ class JtlListener:
             "Connect",
         ]
         self.user_count = 0
-        self.testplan = ""
         events = self.env.events
         events.request_success.add_listener(self._request_success)
         events.request_failure.add_listener(self._request_failure)
@@ -75,27 +83,47 @@ class JtlListener:
             self._flush_to_log()
 
     def _create_results_log(self):
-        self.filename = "results_" + datetime.fromtimestamp(time()).strftime(self.results_timestamp_format) + ".csv"
+        self.filename = "results_" + \
+            datetime.fromtimestamp(time()).strftime(
+                self.results_timestamp_format) + ".csv"
         Path("logs/").mkdir(parents=True, exist_ok=True)
         results_file = open('logs/' + self.filename, "w")
-        results_file.write(self.field_delimiter.join(self.csv_headers) + self.row_delimiter)
+        results_file.write(self.field_delimiter.join(
+            self.csv_headers) + self.row_delimiter)
         results_file.flush()
         self.results_file = results_file
 
     def _flush_to_log(self):
         if self.results_file is None:
             return
-        self.results_file.write(self.row_delimiter.join(self.master_csv_data) + self.row_delimiter)
+        self.results_file.write(self.row_delimiter.join(
+            self.master_csv_data) + self.row_delimiter)
         self.results_file.flush()
         self.master_csv_data = []
 
-    def _test_stop(self, *a, **kw):
+    def _test_stop(self, *a, environment):
         sleep(5)  # wait for last reports to arrive
         if self.results_file:
-            self.results_file.write(self.row_delimiter.join(self.master_csv_data) + self.row_delimiter)
-            self.results_file.close()
-            self.results_file = None
+            self.results_file.write(self.row_delimiter.join(
+                self.master_csv_data) + self.row_delimiter)
+        if self.project_name and self.scenario_name and self.api_token and self.environment:
+            try:
+                self._upload_file()
+            except Exception as e:
+                print(e)
 
+    def _upload_file(self):
+        files = dict(
+            kpi=open('logs/' + self.filename, 'rb'),
+            environment=(None, self.environment),
+            status=(None, 1))
+        url = '<jtl-url>/api/projects/%s/scenarios/%s/items' % (
+            self.project_name, self.scenario_name)
+        print(files)
+        response = requests.post(url, files=files, headers={
+                                 'x-access-token': self.api_token})
+        if response.status_code != 200:
+            raise Exception("Upload failed: %s" % response.text)
 
     def add_result(self, success, _request_type, name, response_time, response_length, exception, **kw):
         timestamp = str(int(round(time() * 1000)))
@@ -130,7 +158,9 @@ class JtlListener:
         self.csv_results.append(self.field_delimiter.join(row))
 
     def _request_success(self, request_type, name, response_time, response_length, **kw):
-        self.add_result("true", request_type, name, response_time, response_length, "", **kw)
+        self.add_result("true", request_type, name,
+                        response_time, response_length, "", **kw)
 
     def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
-        self.add_result("false", request_type, name, response_time, response_length, str(exception), **kw)
+        self.add_result("false", request_type, name, response_time,
+                        response_length, str(exception), **kw)
