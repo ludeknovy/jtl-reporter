@@ -1,3 +1,7 @@
+<h1 align="center">JtlReporter</h1>
+
+![jtl gif](/assets/jtl.gif)
+
 ## Description
  Reporting tool for [Taurus](https://gettaurus.org)(JMeter) load tests. Jtl Reporter is meant to be used as addition to Grafana perf stack. While Grafana provides great solution for live data preview it falls short of easy test run retrospective. Jtl Reporter's main objective is to give you the possibility compare test runs with ease.
 
@@ -72,7 +76,7 @@ def on_locust_init(environment, **_kwargs):
 
 After the test finishes you will find a jtl file in `logs` folder. 
 
-Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.
+~~Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.~~
 
 ## Uploading large JTL file
 If you plan to upload large JTL file, you need to change mongo settings like this:
@@ -90,10 +94,11 @@ MongoError: $push used too much memory and cannot spill to disk. Memory limit: 1
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
   * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
+  * [listener](https://github.com/ludeknovy/jtl-reporter-listener-service)
 
 
 ## Screenshot
-![Item detail](/screenshots/item_detail.png)
+![Item detail](/assets/item_detail.png)
 
 ## License
 Jtl Reporter is [GPL-3.0 licensed.](LICENSE)  
