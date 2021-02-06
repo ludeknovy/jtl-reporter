@@ -71,7 +71,9 @@ from jtl_listener import JtlListener
 
 @events.init.add_listener
 def on_locust_init(environment, **_kwargs):
-    JtlListener(env=environment)
+    JtlListener(env=environment,  project_name="<project name>",
+                scenario_name="<scenario name>",
+                environment="<tested envitonment>")
 ```
 
 After the test finishes you will find a jtl file in `logs` folder. 
