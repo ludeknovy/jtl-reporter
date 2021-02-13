@@ -19,7 +19,6 @@ class JtlListener:
         env,
         project_name: str,
         scenario: str,
-        environment: str,
         hostname: str,
         backed_url: str,
         timestamp_format="%Y-%m-%d %H:%M:%S",
@@ -28,7 +27,6 @@ class JtlListener:
         self.runner = self.env.runner
         self.project_name = project_name
         self.scenario_name = scenario
-        self.environment = environment
         self.hostname = hostname
         self.backend_url = backed_url
         self.api_token = os.environ["JTL_API_TOKEN"]
@@ -94,7 +92,7 @@ class JtlListener:
                 "x-access-token": self.api_token
             }
             payload = {
-                "environment": self.environment
+                "environment": self.env.host
             }
             response = requests.post(f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/start-async", json=payload, headers=headers)
             return response.json()

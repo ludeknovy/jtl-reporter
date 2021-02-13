@@ -101,7 +101,6 @@ from jtl_listener_service import JtlListener
 def on_locust_init(environment, **_kwargs):
     JtlListener(env=environment,  project_name="project name",
                 scenario_name="scenario name",
-                environment="tested envitonment",
                 hostname="hostname",
                 backend_url="http://IP_ADDRESS")
 ```
