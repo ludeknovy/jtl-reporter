@@ -28,8 +28,16 @@ More on [blog](https://www.ludeknovy.tech/blog/generate-intuitive-jmeter-reports
   username: admin
   password: 2Txnf5prDknTFYTVEXjj
   ```
+## Integration. How to get log data in
 
-## Taurus integration
+### Manually via UI
+This is the easiest and fastest way if you want to try out this application. 
+
+You have to create a new project and scenario before you can upload any performance test data. To a create new project click on the user icon at the top menu, then **administrate** —> **add project**. Enter the project name and confirm. Now head to project detail by selecting it from the projects dropdown at the top menu and click **add new scenario**. Enter the scenario name and confirm. Open its detail by clicking on its name. 
+
+Once you are in the scenario detail you click the **Add test run** button, where you can upload a `.jtl` file and fill in other related information. Once you hit **Submit** button you should get confirmation. Once the `.jtl` file is processed you will see the new item in the listing.
+
+### Taurus integration
 Jtl Reporter can be easily integrated with Taurus. To do it we are going to use [shell exec module](https://gettaurus.org/docs/ShellExec/) and custom python upload script. Here is an example of test yaml configuration:
 ```
 settings:
@@ -60,11 +68,11 @@ Launch your test and after it finishes it will upload .jtl file(s) into Jtl Repo
 
 Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
 
-## Locust.io integration
+### Locust.io integration
 
 You have two options here - generate JTL file and upload it to the application, or use JTL listener service and upload the results continuous while running your test.
 
-### Generating and uploading JTL file
+#### Generating and uploading JTL file
 Download [jtl_listener.py](/scripts/jtl_listener.py) into your locust project folder.
 
 Register the listener in your locust test by placing event listener at the very end of the file:
@@ -87,8 +95,7 @@ After the test finishes you will find a jtl file in `logs` folder.
 
 ~~Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.~~
 
-
-### Continuous results uploading
+#### Continuous results uploading
 Download [jtl_listener_service.py](/scripts/jtl_listener_service.py) into your locust project folder.
 
 Register the listener in your locust test by placing event listener at the very end of the file:
