@@ -1,5 +1,6 @@
 import gevent
 import gevent.monkey
+import socket
 
 from time import sleep, time
 import requests
@@ -10,25 +11,25 @@ import os
 
 
 class JtlListener:
-
     # holds results until processed
     results: List[dict] = []
 
     def __init__(
-        self,
-        env,
-        project_name: str,
-        scenario: str,
-        hostname: str,
-        backed_url: str,
-        timestamp_format="%Y-%m-%d %H:%M:%S",
+            self,
+            env,
+            project_name: str,
+            scenario_name: str,
+            backend_url: str,
+            hostname: str = socket.gethostname(),
+            timestamp_format="%Y-%m-%d %H:%M:%S",
     ):
+        print(env.host)
         self.env = env
         self.runner = self.env.runner
         self.project_name = project_name
-        self.scenario_name = scenario
+        self.scenario_name = scenario_name
         self.hostname = hostname
-        self.backend_url = backed_url
+        self.backend_url = backend_url
         self.api_token = os.environ["JTL_API_TOKEN"]
         self.be_url = f"{self.backend_url}:5000"
         self.listener_url = f"{self.backend_url}:6000"
@@ -39,10 +40,8 @@ class JtlListener:
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._finished = False
-
         self.user_count = 0
-        self.testplan = ""
-        self.jwt_token = self._login()
+        self.jwt_token = None
 
         events = self.env.events
         events.request_success.add_listener(self._request_success)
@@ -75,18 +74,21 @@ class JtlListener:
             gevent.sleep(3)
 
     def _login(self):
+        logging.info("Logging with token")
         try:
             payload = {
                 "token": self.api_token
             }
-            response = requests.post(f"{self.be_url}/api/auth/login-with-token", json=payload)
-            print(response.json())
+            response = requests.post(
+                f"{self.be_url}/api/auth/login-with-token", json=payload)
+            logging.info(f"Login with token returned {response.json()}")
             return response.json()["jwtToken"]
         except Exception:
             logging.error("Unable to to get token")
             raise Exception
 
     def _start_test_run(self):
+        logging.info("Starting async item in Reporter")
         try:
             headers = {
                 "x-access-token": self.api_token
@@ -94,10 +96,13 @@ class JtlListener:
             payload = {
                 "environment": self.env.host
             }
-            response = requests.post(f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/start-async", json=payload, headers=headers)
+            response = requests.post(
+                f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/start-async",
+                json=payload, headers=headers)
+            logging.info(f"Reporter responded with {response.json()}")
             return response.json()
         except Exception:
-            logging.error("Unable to to get token")
+            logging.error("Starting async item in Reporter failed")
             logging.error(Exception)
             raise Exception
 
@@ -110,7 +115,8 @@ class JtlListener:
             headers = {
                 "x-access-token": self.jwt_token
             }
-            requests.post(f"{self.listener_url}/api/v1/test-run/log-samples", json=payload, headers=headers)
+            requests.post(
+                f"{self.listener_url}/api/v1/test-run/log-samples", json=payload, headers=headers)
 
         except Exception:
             logging.error("Unable to to get token")
@@ -121,22 +127,23 @@ class JtlListener:
             headers = {
                 "x-access-token": self.api_token
             }
-            response = requests.post(f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/{self.item_id}/stop-async", headers=headers)
+            response = requests.post(
+                f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/{self.item_id}/stop-async",
+                headers=headers)
             return response.json()
         except Exception:
             logging.error(Exception)
             raise Exception
 
-
     def _test_start(self, *a, **kw):
         if self._is_master():
+            self.jwt_token = self._login()
             logging.info("Setting up background tasks")
             self._finished = False
             self._background = gevent.spawn(self._run)
             self._background_user = gevent.spawn(self._user_count)
 
         response = self._start_test_run()
-        print(response)
         self.data_id = response["dataId"]
         self.item_id = response["itemId"]
 
@@ -150,10 +157,10 @@ class JtlListener:
                 result["allThreads"] = self.user_count
             self.results += data['results']
 
-
     def _test_stop(self, *a, **kw):
         sleep(5)  # wait for last reports to arrive
-        logging.info(f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
+        logging.info(
+            f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
         self._finished = True
         self._background.join(timeout=None)
         self._background_user.join(timeout=None)
@@ -185,12 +192,13 @@ class JtlListener:
         }
         self.results.append(result)
 
-
     def _request_success(self, request_type, name, response_time, response_length, **kw):
-        self.add_result("true", request_type, name, response_time, response_length, "", **kw)
+        self.add_result("true", request_type, name,
+                        response_time, response_length, "", **kw)
 
     def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
-        self.add_result("false", request_type, name, response_time, response_length, str(exception), **kw)
+        self.add_result("false", request_type, name, response_time,
+                        response_length, str(exception), **kw)
 
     def _is_master(self):
         return "--master" in sys.argv
