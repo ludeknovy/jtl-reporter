@@ -116,8 +116,9 @@ Generate api token in the application and set it as `JTL_API_TOKEN` env variable
 
 Once you run your test, the plugin will start uploading results to [jtl listener service](https://github.com/ludeknovy/jtl-reporter-listener-service).
 
-## Known limitations
-* The outputs from JMeter distributed mode will be successfully processed, but will give you unacurate number of VU.
+## JMeter Distributed Mode
+* If you run your tests in distributed mode you need to provide `Hostname` in csv output.
+You can do it by setting `jmeter.save.saveservice.hostname=true` in `jmeter.properties`
 
 ## Uploading large JTL file
 If you plan to upload large JTL file, you need to change mongo settings like this:
