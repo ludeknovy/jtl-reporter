@@ -72,6 +72,8 @@ Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter 
 
 You have two options here - generate JTL file and upload it to the application, or use JTL listener service and upload the results continuous while running your test.
 
+Please note that the below-mentioned listeners currenty support only distributed mode.
+
 #### Generating and uploading JTL file
 Download [jtl_listener.py](/scripts/jtl_listener.py) into your locust project folder.
 
