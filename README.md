@@ -16,7 +16,7 @@ If you want to compare HTML reports, you need to open them side by side and look
 If you run your performance tests regularly as a part of your delivery pipeline, you might set up performance thresholds for response time, error rate, and throughput. With each new report processing, it checks the long-term averages for the same environment. In case the performance did degrade above set up thresholds, you will get an alert in the report detail.
 
 #### Performance insights
-JtlReport will perform some performance analysis automatically for you. It aims to help you to interpret the outcome of the measurements and warn you if there might be an issue related to an overloaded system under tests. Currently, the application checks three metrics, and if any of them evinces poor performance it will mark it and provide you with the details.
+JtlReport will perform some performance analysis automatically for you. It aims to help you to interpret the outcome of the measurements and warn you if there might be an issue related to an overloaded system under tests. Currently, the application checks three metrics, and if any of them evinces poor performance it will get marked with detailed information.
 
 ## Installation steps
 1. Install [Docker](https://docs.docker.com/engine/installation/) ([Engine](https://docs.docker.com/engine/installation/), [Compose](https://docs.docker.com/compose/install/))
