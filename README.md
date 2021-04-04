@@ -5,7 +5,7 @@
 ## Description
 Online reporting application to generate reports from JMeter(Taurus), Locust, and other tools by either uploading JTL(csv) file or streaming data from the test run continuously. Jtl Reporter's main objective is to help you to understand your performance reports better and help you to spot performance regression.
 
-### Main features
+## Features
 #### Detailed performance report
 JtlReport will provide you with metrics for each label (endpoint call) such as requests per seconds, various percentiles, error rate and more. It will provide you the overall stats as well, eg: the total throughput (RPS), 90% percentile, network data transferred (mbps). Besides the prepared charts (throughput, response times, network, and so on), you can create your custom chart from the available metrics to further explore the performance report.
 
