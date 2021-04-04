@@ -3,7 +3,7 @@
 ![jtl gif](/assets/jtl.gif)
 
 ## Description
-Online reporting application to generate reports from JMeter(Taurus), Locust and other tool by either uploading JTL file or streaming data from the test run continuously. Jtl Reporter's main objective is to give you the possibility compare test runs with ease.
+Online reporting application to generate reports from JMeter(Taurus), Locust, and other tools by either uploading JTL(csv) file or streaming data from the test run continuously. Jtl Reporter's main objective is to help you to understand your performance reports better and help you to spot performance regression.
 
 More on [blog](https://www.ludeknovy.tech/blog/generate-intuitive-jmeter-reports-with-jtlreporter-and-taurus/)
 
