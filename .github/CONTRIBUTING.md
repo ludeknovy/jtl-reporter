@@ -21,7 +21,7 @@ Issues should be used to report problems with the application, request a new fea
 If you find an Issue that addresses the problem you're having, please add your own reproduction information to the existing issue rather than creating a new one. Adding a reaction can also help be indicating to our maintainers that a particular problem is affecting more than just the reporter.
 
 ### Pull Requests
-PRs to our libraries are always welcome and can be a quick way to get your fix or improvement slated for the next release. In general, PRs should:
+PRs to the project are always welcome and can be a quick way to get your fix or improvement slated for the next release. In general, PRs should:
 
 * Only fix/add the functionality in question OR address wide-spread whitespace/style issues, not both.
 * Add unit or integration tests for fixed or changed functionality.
@@ -40,4 +40,4 @@ In general, we follow the "fork-and-pull" Git workflow
 7. Open a PR in our repository and follow the PR template so that we can efficiently review the changes.
 
 ## Getting Help
-Post your question in GH discussions
+Post your question in [discussions](https://github.com/ludeknovy/jtl-reporter/discussions)
