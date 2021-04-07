@@ -39,7 +39,7 @@ JtlReport will perform some performance analysis automatically for you. It aims 
   username: admin
   password: 2Txnf5prDknTFYTVEXjj
   ```
-## Integration. How to get log data in
+## Integration - How to get data in
 
 ### Manually via UI
 This is the easiest and fastest way if you want to try out this application. 
