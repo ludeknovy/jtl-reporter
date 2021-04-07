@@ -39,6 +39,30 @@ JtlReport will perform some performance analysis automatically for you. It aims 
   username: admin
   password: 2Txnf5prDknTFYTVEXjj
   ```
+## CSV data format
+To get most from you data, please make sure you provide all of these data in the CSV file.
+
+```timeStamp
+elapsed
+label
+responseCode
+responseMessage
+threadName
+dataType
+success
+failureMessage
+bytes
+sentBytes
+grpThreads
+allThreads
+URL
+Latency
+IdleTime
+Connect
+Hostname
+```
+JMeter/Taurus does not export all of these data by default (URL, Hostname). Please refer to [JMeter docs](https://jmeter.apache.org/usermanual/listeners.html#defaults) on how to expose them.
+
 ## Integration - How to get data in
 
 ### Manually via UI
