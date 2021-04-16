@@ -39,141 +39,16 @@ JtlReport will perform some performance analysis automatically for you. It aims 
   username: admin
   password: 2Txnf5prDknTFYTVEXjj
   ```
-## CSV data format
-To get most from you data, please make sure you provide all of these data in the CSV file.
-
-```timeStamp
-elapsed
-label
-responseCode
-responseMessage
-threadName
-dataType
-success
-failureMessage
-bytes
-sentBytes
-grpThreads
-allThreads
-URL
-Latency
-IdleTime
-Connect
-Hostname
-```
-JMeter/Taurus does not export all of these data by default (URL, Hostname). Please refer to [JMeter docs](https://jmeter.apache.org/usermanual/listeners.html#defaults) on how to expose them.
-
-## Integration - How to get data in
-
-### Manually via UI
-This is the easiest and fastest way if you want to try out this application. 
-
-You have to create a new project and scenario before you can upload any performance test data. To a create new project click on the user icon at the top menu, then **administrate** —> **add project**. Enter the project name and confirm. Now head to project detail by selecting it from the projects dropdown at the top menu and click **add new scenario**. Enter the scenario name and confirm. Open its detail by clicking on its name. 
-
-Once you are in the scenario detail you click the **Add test run** button, where you can upload a `.jtl` file and fill in other related information. Once you hit **Submit** button you should get confirmation. Once the `.jtl` file is processed you will see the new item in the listing.
-
-### Taurus integration
-Jtl Reporter can be easily integrated with Taurus. To do it we are going to use [shell exec module](https://gettaurus.org/docs/ShellExec/) and custom python upload script. Here is an example of test yaml configuration:
-```
-settings:
-  env:
-    BASE_URL: yourBaseUrl.com
-    SCENARIO: demoScenario
-    PROJECT: demoProject
-execution:
-  concurrency: 50
-  ramp-up: 3m
-  hold-for: 30m
-  scenario: demoScenario
-
-scenarios:
-  demoScenario:
-    script: jmx/demo.jmx
-    variables:
-      baseUrl: ${BASE_URL}
-
-services:
- - module: shellexec
-   post-process:
-   - python $PWD/helper/upload_jtl.py -p ${PROJECT} -s ${SCENARIO} -e ${BASE_URL} -ec $TAURUS_EXIT_CODE -er "${TAURUS_STOPPING_REASON:-''}"
-```
-Do not forget to copy [upload_jtl.py](/scripts/upload_jtl.py) script into your project folder.
-
-Launch your test and after it finishes it will upload .jtl file(s) into Jtl Reporter automatically.
-
-Please note that "demoProject" and "demoScenario" have to exist in Jtl Reporter beforehand otherwise it will return an error.
-
-### Locust.io integration
-
-You have two options here - generate JTL file and upload it to the application, or use JTL listener service and upload the results continuous while running your test.
-
-**Please note that the below-mentioned listeners currenty support only distributed mode.**
-
-#### Generating and uploading JTL file
-Download [jtl_listener.py](/scripts/jtl_listener.py) into your locust project folder.
-
-Register the listener in your locust test by placing event listener at the very end of the file:
-```
-from jtl_listener import JtlListener
-
-...
-
-@events.init.add_listener
-def on_locust_init(environment, **_kwargs):
-    JtlListener(env=environment,  project_name="project name",
-                scenario_name="scenario name",
-                environment="tested envitonment",
-                backend_url="http://IP_ADDRESS")
-```
-
-Generate api token in the application and set it as `JTL_API_TOKEN` env variable.
-
-After the test finishes you will find a jtl file in `logs` folder. 
-
-~~Because of this [issue](https://github.com/locustio/locust/issues/1638) it's not possible to upload the file automatically.~~
-
-#### Continuous results uploading
-Download [jtl_listener_service.py](/scripts/jtl_listener_service.py) into your locust project folder.
-
-Register the listener in your locust test by placing event listener at the very end of the file:
-```
-from jtl_listener_service import JtlListener
-
-...
-
-@events.init.add_listener
-def on_locust_init(environment, **_kwargs):
-    JtlListener(env=environment,  project_name="project name",
-                scenario_name="scenario name",
-                hostname="hostname",
-                backend_url="http://IP_ADDRESS")
-```
-
-Generate api token in the application and set it as `JTL_API_TOKEN` env variable.
-
-Once you run your test, the plugin will start uploading results to [jtl listener service](https://github.com/ludeknovy/jtl-reporter-listener-service).
-
-## JMeter Distributed Mode
-* If you run your tests in distributed mode you need to provide `Hostname` in csv output.
-You can do it by setting `jmeter.save.saveservice.hostname=true` in `jmeter.properties`
-
-## Uploading large JTL file
-If you plan to upload large JTL file, you need to change mongo settings like this:
-```
-let newLimit = 1000 * 1024 * 1024;
-db.adminCommand({setParameter: 1, internalQueryMaxPushBytes: newLimit});
-```
-
-Otherwise mongo will throw error like this:
-```
-MongoError: $push used too much memory and cannot spill to disk. Memory limit: 104857600 bytes",
-```
+  
+## Documentation 📖
+For additional information please refer to [documentation](https://jtlreporter.site).
 
 ## Repositories structure
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
   * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
   * [listener](https://github.com/ludeknovy/jtl-reporter-listener-service)
+  * [docs](https://github.com/ludeknovy/jtl-reporter-docs)
 
 
 ## Screenshot
