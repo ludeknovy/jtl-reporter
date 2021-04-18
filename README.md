@@ -35,7 +35,7 @@ Online reporting application to generate reports from JMeter(Taurus), Locust and
   ```
   
 ## Documentation 📖
-For additional information please refer to [documentation](https://jtlreporter.site/docs/).
+For additional information please refer to the [documentation](https://jtlreporter.site/docs/).
 
 ## Repositories structure
  JtlReporter consists of the following parts:
