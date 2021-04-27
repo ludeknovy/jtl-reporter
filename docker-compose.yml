@@ -9,6 +9,8 @@ services:
       - db
       - be
       - mongodb
+    networks:
+      - jtl_network
 
   db:
     image: novyl/jtl-reporter-db
@@ -23,7 +25,10 @@ services:
       timeout: 5s
       retries: 10
     environment:
+      - DB_HOST=db
       - POSTGRES_HOST_AUTH_METHOD=trust
+    networks:
+      - jtl_network
 
   mongodb:
     image: mongo:4.2.5-bionic
@@ -35,7 +40,8 @@ services:
       - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
     ports: 
       - "27020:27017"
-
+    networks:
+      - jtl_network
   be:
     image: novyl/jtl-reporter-be:v3.4.2
     ports:
@@ -45,6 +51,8 @@ services:
       - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
       - JWT_TOKEN=27JU4qy73hchTMLoH8w9m # please change this token
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
+    networks:
+      - jtl_network
 
   migration:
     image: novyl/jtl-reporter-be:v3.4.2
@@ -54,7 +62,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-  
+    networks:
+      - jtl_network
+
   listener:
     image: novyl/jtl-reporter-listener-service:v1.0.1
     ports:
@@ -62,6 +72,9 @@ services:
     environment: 
       - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
       - JWT_TOKEN=GdK6TrCvX7rJRZJVg4ijt # paste the same token as in be service - JWT_TOKEN_LOGIN
-    
-    
+    networks:
+      - jtl_network
 
+networks:
+  jtl_network:
+    driver: bridge
