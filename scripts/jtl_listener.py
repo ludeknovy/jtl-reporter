@@ -62,9 +62,7 @@ class JtlListener:
         ]
         self.user_count = 0
         events = self.env.events
-        events.request_success.add_listener(self._request_success)
-        events.request_failure.add_listener(self._request_failure)
-
+        events.request.add_listener(self._request)
         events.worker_report.add_listener(self._worker_report)
         events.report_to_master.add_listener(self._report_to_master)
         events.test_start.add_listener(self._test_start)
@@ -127,18 +125,20 @@ class JtlListener:
         if response.status_code != 200:
             raise Exception("Upload failed: %s" % response.text)
 
-    def add_result(self, success, _request_type, name, response_time, response_length, exception, **kw):
+    def add_result(self, success, request_type, name, response_time, response_length, response, context, exception):
         timestamp = str(int(round(time() * 1000)))
-        response_message = "OK" if success == "true" else "KO"
+        response_message = "OK" if success is True else "KO"
         # check to see if the additional fields have been populated. If not, set to a default value
-        status_code = kw["status_code"] if "status_code" in kw else "0"
-        data_type = kw["data_type"] if "data_type" in kw else "unknown"
-        bytes_sent = kw["bytes_sent"] if "bytes_sent" in kw else "0"
+        status_code = response.status_code
+        data_type = "unknown"
+        bytes_sent = "0"
         group_threads = str(self.runner.user_count)
         all_threads = str(self.runner.user_count)
-        latency = kw["latency"] if "latency" in kw else "0"
-        idle_time = kw["idle_time"] if "idle_time" in kw else "0"
-        connect = kw["connect"] if "connect" in kw else "0"
+        latency = "0"
+        idle_time = "0"
+        connect = "0"
+        exception = "" if exception is None else str(exception)
+        success = "true" if success else "false"
 
         row = [
             timestamp,
@@ -159,10 +159,8 @@ class JtlListener:
         ]
         self.csv_results.append(self.field_delimiter.join(row))
 
-    def _request_success(self, request_type, name, response_time, response_length, **kw):
-        self.add_result("true", request_type, name,
-                        response_time, response_length, "", **kw)
 
-    def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
-        self.add_result("false", request_type, name, response_time,
-                        response_length, str(exception), **kw)
+    def _request(self, request_type, name, response_time, response_length, response, context, exception):
+        success = False if exception else True
+        self.add_result(success, request_type, name, response_time,
+                        response_length, response, context, exception)
