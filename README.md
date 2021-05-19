@@ -49,4 +49,6 @@ For additional information please refer to the [documentation](https://jtlreport
 ![Item detail](/assets/item_detail.png)
 
 ## License
-Jtl Reporter is [GPL-3.0 licensed.](LICENSE)  
+Jtl Reporter is GPL-3.0 licensed (the frontend and backend). 
+
+This repository is [MIT licensed.](LICENSE)
