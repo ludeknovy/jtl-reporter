@@ -3,6 +3,7 @@ from time import time, sleep
 from pathlib import Path
 import os
 import requests
+import socket
 
 
 class JtlListener:
@@ -35,6 +36,7 @@ class JtlListener:
         self.flush_size = flush_size
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
+        self._worker_id = f"{socket.gethostname()}_{os.getpid()}"
 
         self.api_token = os.environ['JTL_API_TOKEN']
         self.project_name = project_name
@@ -51,7 +53,6 @@ class JtlListener:
             "responseMessage",
             "dataType",
             "success",
-            "failureMessage",
             "bytes",
             "sentBytes",
             "grpThreads",
@@ -59,6 +60,7 @@ class JtlListener:
             "Latency",
             "IdleTime",
             "Connect",
+            "Hostname"
         ]
         self.user_count = 0
         events = self.env.events
@@ -139,6 +141,7 @@ class JtlListener:
         latency = kw["latency"] if "latency" in kw else "0"
         idle_time = kw["idle_time"] if "idle_time" in kw else "0"
         connect = kw["connect"] if "connect" in kw else "0"
+        hostname = self._worker_id
 
         row = [
             timestamp,
@@ -156,6 +159,7 @@ class JtlListener:
             latency,
             idle_time,
             connect,
+            hostname
         ]
         self.csv_results.append(self.field_delimiter.join(row))
 
