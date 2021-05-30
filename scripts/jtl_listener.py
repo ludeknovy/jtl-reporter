@@ -151,7 +151,6 @@ class JtlListener:
             response_message,
             data_type,
             success,
-            exception,
             str(response_length),
             bytes_sent,
             str(group_threads),
