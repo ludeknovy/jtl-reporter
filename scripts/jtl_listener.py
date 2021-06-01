@@ -4,8 +4,6 @@ from pathlib import Path
 import os
 import requests
 import socket
-import csv
-import io
 
 
 class JtlListener:
@@ -162,7 +160,12 @@ class JtlListener:
             connect,
             hostname
         ]
-        self.csv_results.append(self._list_to_csv_row(row))
+        # Safe way to generate csv row up to RFC4180
+        # https://datatracker.ietf.org/doc/html/rfc4180
+        # It encloses all fields in double quotes and escape single double-quotes chars with double double quotes.
+        # Example: " -> ""
+        csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row]) + '\n'
+        self.csv_results.append(csv_row_str)
 
     def _request_success(self, request_type, name, response_time, response_length, **kw):
         self.add_result("true", request_type, name,
@@ -171,11 +174,3 @@ class JtlListener:
     def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
         self.add_result("false", request_type, name, response_time,
                         response_length, str(exception), **kw)
-
-    def _list_to_csv_row(self, lst):
-        mem_file = io.StringIO()
-        writer = csv.writer(mem_file, delimiter=self.field_delimiter)
-        writer.writerow(lst)
-        csv_string = mem_file.getvalue()
-        mem_file.close()
-        return csv_string
