@@ -164,7 +164,7 @@ class JtlListener:
         # https://datatracker.ietf.org/doc/html/rfc4180
         # It encloses all fields in double quotes and escape single double-quotes chars with double double quotes.
         # Example: " -> ""
-        csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row]) + '\n'
+        csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row])
         self.csv_results.append(csv_row_str)
 
     def _request_success(self, request_type, name, response_time, response_length, **kw):
