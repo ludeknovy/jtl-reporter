@@ -151,7 +151,6 @@ class JtlListener:
             response_message,
             data_type,
             success,
-            exception,
             str(response_length),
             bytes_sent,
             str(group_threads),
@@ -161,7 +160,12 @@ class JtlListener:
             connect,
             hostname
         ]
-        self.csv_results.append(self.field_delimiter.join(row))
+        # Safe way to generate csv row up to RFC4180
+        # https://datatracker.ietf.org/doc/html/rfc4180
+        # It encloses all fields in double quotes and escape single double-quotes chars with double double quotes.
+        # Example: " -> ""
+        csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row])
+        self.csv_results.append(csv_row_str)
 
     def _request_success(self, request_type, name, response_time, response_length, **kw):
         self.add_result("true", request_type, name,
