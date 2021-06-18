@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import time, sleep
 from pathlib import Path
+from locust.runners import WorkerRunner
 import os
 import requests
 import socket
@@ -9,7 +10,6 @@ import socket
 class JtlListener:
     # holds results until processed
     csv_results = []
-    master_csv_data = None
     results_file = None
     filename = None
 
@@ -37,6 +37,8 @@ class JtlListener:
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._worker_id = f"{socket.gethostname()}_{os.getpid()}"
+        self.is_worker_runner = isinstance(self.env.runner, WorkerRunner)
+
 
         self.api_token = os.environ['JTL_API_TOKEN']
         self.project_name = project_name
@@ -67,8 +69,11 @@ class JtlListener:
         events.request_success.add_listener(self._request_success)
         events.request_failure.add_listener(self._request_failure)
 
-        events.worker_report.add_listener(self._worker_report)
-        events.report_to_master.add_listener(self._report_to_master)
+        if self.is_worker_runner:
+            events.report_to_master.add_listener(self._report_to_master)
+        else:
+            events.worker_report.add_listener(self._worker_report)
+
         events.test_start.add_listener(self._test_start)
         events.test_stop.add_listener(self._test_stop)
 
@@ -81,9 +86,9 @@ class JtlListener:
 
     def _worker_report(self, client_id, data):
         if 'csv' in data:
-            self.master_csv_data = data['csv']
+            self.csv_results = data['csv']
 
-        if self.master_csv_data and len(self.master_csv_data) > 0:
+        if self.csv_results and len(self.csv_results) > 0:
             self._flush_to_log()
 
     def _create_results_log(self):
@@ -101,15 +106,14 @@ class JtlListener:
         if self.results_file is None:
             return
         self.results_file.write(self.row_delimiter.join(
-            self.master_csv_data) + self.row_delimiter)
+            self.csv_results) + self.row_delimiter)
         self.results_file.flush()
-        self.master_csv_data = []
+        self.csv_results = []
 
     def _test_stop(self, *a, environment):
         sleep(5)  # wait for last reports to arrive
         if self.results_file:
-            self.results_file.write(self.row_delimiter.join(
-                self.master_csv_data) + self.row_delimiter)
+            self._flush_to_log()
         if self.project_name and self.scenario_name and self.api_token and self.environment:
             try:
                 self._upload_file()
@@ -166,6 +170,8 @@ class JtlListener:
         # Example: " -> ""
         csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row])
         self.csv_results.append(csv_row_str)
+        if len(self.csv_results) >= self.flush_size and not self.is_worker_runner:
+            self._flush_to_log()
 
     def _request_success(self, request_type, name, response_time, response_length, **kw):
         self.add_result("true", request_type, name,
