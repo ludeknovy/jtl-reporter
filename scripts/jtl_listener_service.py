@@ -41,6 +41,7 @@ class JtlListener:
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._finished = False
         self.user_count = 0
+        self.cpu_usage = []
         self.jwt_token = None
 
         events = self.env.events
@@ -52,19 +53,30 @@ class JtlListener:
         events.test_start.add_listener(self._test_start)
         events.test_stop.add_listener(self._test_stop)
 
+
     def _run(self):
         while True:
             if len(self.results) >= self.flush_size:
+                print(self.cpu_usage)
                 results_to_log = self.results[:self.flush_size]
+                cpu_usage_to_log = self.cpu_usage[:self.flush_size]
                 del self.results[:self.flush_size]
-                self._log_results(results_to_log)
+                del self.cpu_usage[:self.flush_size]
+                self._log_results(results_to_log, cpu_usage_to_log)
             else:
                 if self._finished:
                     results_len = len(self.results)
-                    self._log_results(self.results)
+                    cpu_usage_len = len(self.cpu_usage)
+                    self._log_results(self.results, self.cpu_usage)
                     del self.results[:results_len]
+                    del self.cpu_usage[:cpu_usage_len]
                     break
             gevent.sleep(0.05)
+
+    def _master_cpu_monitor(self):
+        while True:
+            self.cpu_usage.append({ "name": "master", "cpu": self.get_cpu(), "timestamp": int(round(time() * 1000)) })
+            gevent.sleep(5)
 
     def _user_count(self):
         while True:
@@ -106,11 +118,13 @@ class JtlListener:
             logging.error(Exception)
             raise Exception
 
-    def _log_results(self, results):
+    def _log_results(self, results, cpu_usage):
         try:
             payload = {
                 "dataId": self.data_id,
-                "samples": results
+                "samples": results,
+                "monitor": cpu_usage,
+
             }
             headers = {
                 "x-access-token": self.jwt_token
@@ -141,6 +155,7 @@ class JtlListener:
             logging.info("Setting up background tasks")
             self._finished = False
             self._background = gevent.spawn(self._run)
+            self._background_master_monitor = gevent.spawn(self._master_cpu_monitor)
             self._background_user = gevent.spawn(self._user_count)
 
         response = self._start_test_run()
@@ -149,6 +164,7 @@ class JtlListener:
 
     def _report_to_master(self, client_id, data):
         data["results"] = self.results
+        data["cpu_usage"] = {  "name": client_id, "timestamp": int(round(time() * 1000)) , "cpu": self.get_cpu() }
         self.results = []
 
     def _worker_report(self, client_id, data):
@@ -156,6 +172,8 @@ class JtlListener:
             for result in data['results']:
                 result["allThreads"] = self.user_count
             self.results += data['results']
+        if 'cpu_usage' in data:
+            self.cpu_usage.append(data["cpu_usage"])
 
     def _test_stop(self, *a, **kw):
         sleep(5)  # wait for last reports to arrive
@@ -164,6 +182,7 @@ class JtlListener:
         self._finished = True
         self._background.join(timeout=None)
         self._background_user.join(timeout=None)
+        self._background_master_monitor.join(timeout=None)
         logging.info(f"Results :::::: {len(self.results)}")
         self._stop_test_run()
 
@@ -202,3 +221,7 @@ class JtlListener:
 
     def _is_master(self):
         return "--master" in sys.argv
+
+    def get_cpu(self):
+        return self.runner.current_cpu_usage
+
