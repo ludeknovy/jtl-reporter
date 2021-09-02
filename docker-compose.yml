@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   fe:
-    image: novyl/jtl-reporter-fe:v3.4.3
+    image: novyl/jtl-reporter-fe:v4
     ports:
      - "2020:80"
     depends_on:
@@ -25,17 +25,16 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
   be:
-    image: novyl/jtl-reporter-be:v3.4.2
+    image: novyl/jtl-reporter-be:v4
     ports:
       - "5000:5000"
     environment:
       - DB_HOST=db
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
       - JWT_TOKEN=27JU4qy73hchTMLoH8w9m # please change this token
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be:v3.4.2
+    image: novyl/jtl-reporter-be:v4
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
     command: npm run migrate up
@@ -44,11 +43,11 @@ services:
         condition: service_healthy
   
   listener:
-    image: novyl/jtl-reporter-listener-service:v1.0.1
+    image: novyl/jtl-reporter-listener-service:v2
     ports:
       - "6000:6000"
     environment: 
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
+      - DB_HOST=db
       - JWT_TOKEN=GdK6TrCvX7rJRZJVg4ijt # paste the same token as in be service - JWT_TOKEN_LOGIN
     
     
