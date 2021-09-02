@@ -8,7 +8,6 @@ services:
     depends_on:
       - db
       - be
-      - mongodb
 
   db:
     image: novyl/jtl-reporter-db
@@ -16,7 +15,7 @@ services:
       context: ./db/
       dockerfile: Dockerfile
     volumes:
-      - ./data/jtl_report:/var/lib/postgresql/data
+      - ./data/jtl_reporter:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -24,17 +23,6 @@ services:
       retries: 10
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
-
-  mongodb:
-    image: mongo:4.2.5-bionic
-    container_name: jtl-reporter-mongodb
-    environment:
-      - MONGO_INITDB_DATABASE=jtl-data
-    volumes: 
-      - ./data/jtl_report_mongo:/data/db
-      - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    ports: 
-      - "27020:27017"
 
   be:
     image: novyl/jtl-reporter-be:v3.4.2
