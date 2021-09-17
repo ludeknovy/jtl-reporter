@@ -1,0 +1,211 @@
+{
+  "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+  "contentVersion": "1.0.0.0",
+  "parameters": {
+    "containerGroupName": {
+      "type": "string",
+      "defaultValue": "jtlreportr"
+    },
+    "mongodbshareName": {
+      "type": "string",
+      "defaultValue": "mongodb"
+    },
+    "Storageaccountname": {
+      "type": "string"
+    },
+    "storageKey": {
+      "type": "string"
+    },
+    "JWT_TOKEN": {
+      "type": "string",
+      "defaultValue": "27JU4qy73hchTMLoH8w9m"
+    },
+    "JWT_TOKEN_LOGIN": {
+      "type": "string",
+      "defaultValue": "GdK6TrCvX7rJRZJVg4ijt"
+    },
+    "PostgresIP": {
+      "type": "string",
+      "defaultValue": "127.0.0.1"
+    }
+  },
+  "variables": {
+    "location": "northeurope",
+    "container2name": "be",
+    "container2image": "novyl/jtl-reporter-be:latest",
+    "container1name": "listener",
+    "container1image": "novyl/jtl-reporter-listener-service:latest",
+    "container3name": "fe",
+    "container3image": "novyl/jtl-reporter-fe:latest",
+    "container4name": "mongodb",
+    "container4image": "mongo:latest"
+  },
+  "resources": [
+    {
+      "name": "[parameters('containerGroupName')]",
+      "type": "Microsoft.ContainerInstance/containerGroups",
+      "apiVersion": "2021-03-01",
+      "location": "[variables('location')]",
+      "properties": {
+        "containers": [
+          {
+            "name": "[variables('container4name')]",
+            "properties": {
+              "image": "[variables('container4image')]",
+              "environmentVariables": [
+                {
+                  "name": "MONGO_INITDB_DATABASE",
+                  "value": "jtl-data"
+                }
+              ],
+              "ports": [
+                {
+                  "port": 27017
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGb": 1
+                }
+              },
+              "volumeMounts": [
+              {
+                "name": "mongodb",
+                "mountPath": "[concat('/data/', variables('container4name'), 'az')]"
+              }
+              ]
+            }
+          },
+          {
+            "name": "[variables('container1name')]",
+            "properties": {
+              "image": "[variables('container1image')]",
+              "command": [ "/bin/sh", "-c", "echo '127.0.0.1 be' >> /etc/hosts; echo '127.0.0.1 fe' >> /etc/hosts;echo '127.0.0.1 listener' >> /etc/hosts; echo '127.0.0.1 mongodb' >> /etc/hosts; npm run start"  ],
+              "environmentVariables": [
+                {
+                    "name": "JWT_TOKEN",
+                    "value": "[parameters('JWT_TOKEN')]"
+                },
+                {
+                    "name": "MONGO_CONNECTION_STRING",
+                    "value": "mongodb://mongodb:27017"
+                }
+              ],
+              "ports": [
+                {
+                  "port": 6000
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGb": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "[variables('container2name')]",
+            "properties": {
+              "image": "[variables('container2image')]",
+              "environmentVariables": [
+                {
+                    "name": "DB_HOST",
+                    "value": "[parameters('PostgresIP')]"
+                },
+                {
+                    "name": "DB_PASS",
+                    "value": "postgres"
+                },
+                {
+                    "name": "DB_USER",
+                    "value": "postgres"
+                },
+                {
+                    "name": "MONGO_CONNECTION_STRING",
+                    "value": "mongodb://mongodb:27017"
+                },
+                {
+                    "name": "JWT_TOKEN",
+                    "value":"[parameters('JWT_TOKEN')]"
+                },
+                {
+                    "name": "JWT_TOKEN_LOGIN",
+                    "value": "[parameters('JWT_TOKEN_LOGIN')]"
+                }
+              ],
+              "ports": [
+                {
+                  "port": 5000
+                }
+              ],
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGb": 1
+                }
+              }
+            }
+          },
+          {
+            "name": "[variables('container3name')]",
+            "properties": {
+              "image": "[variables('container3image')]",
+              "resources": {
+                "requests": {
+                  "cpu": 1,
+                  "memoryInGb": 1
+                }
+              },
+              "ports": [
+                {
+                  "port": 80
+                },
+                {
+                  "port": 2020
+                }
+              ]
+            }
+          }
+        ],
+        "osType": "Linux",
+        "volumes": [
+          {
+            "name": "mongodb",
+            "azureFile": {
+              "shareName": "[parameters('mongodbshareName')]",
+              "storageAccountName": "[parameters('Storageaccountname')]",
+              "storageAccountKey": "[parameters('storageKey')]"
+            }
+          }
+        ],
+        "ipAddress": {
+          "type": "Public",
+          "ports": [
+            {
+              "protocol": "tcp",
+              "port": 80
+            },
+            {
+              "protocol": "tcp",
+              "port": 5000
+            },
+            {
+              "protocol": "tcp",
+              "port": 2020
+            },
+            {
+              "protocol": "tcp",
+              "port": 27017
+            },
+            {
+              "protocol": "tcp",
+              "port": 6000
+            }
+          ]
+        }
+      }
+    }
+  ]
+}

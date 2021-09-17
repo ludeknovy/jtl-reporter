@@ -1,0 +1,97 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "containerGroupName": {
+        "type": "string",
+        "defaultValue": "postgres"
+      },
+      "Storageaccountname": {
+        "type": "string"
+      },
+      "storageKey": {
+        "type": "string"
+      },
+      "postgresdbFileshare": {
+        "type": "string",
+        "defaultvalue": "postgresdb"
+      }
+    },
+    "variables": {
+      "location": "northeurope",
+      "container5name": "postgresdb",
+      "container5image": "postgres"
+    },
+    "resources": [
+      {
+        "name": "[parameters('containerGroupName')]",
+        "type": "Microsoft.ContainerInstance/containerGroups",
+        "apiVersion": "2021-03-01",
+        "location": "[variables('location')]",
+        "properties": {
+          "containers": [
+            {
+              "name": "[variables('container5name')]",
+              "properties": {
+                "image": "[variables('container5image')]",
+                "environmentVariables": [
+                {
+                  "name": "POSTGRES_PASSWORD",
+                  "value": "postgres"
+                },
+                {
+                  "name": "POSTGRES_USER",
+                  "value": "postgres"
+                }
+                ],
+                "ports": [
+                  {
+                    "port": 5432
+                  }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": 1,
+                    "memoryInGb": 1
+                  }
+                },
+                "volumeMounts": [
+                {
+                  "name": "postgresdb",
+                  "mountPath": "/var/lib/postgresql/foobar"
+                }
+                ]
+              }
+            }
+          ],
+          "osType": "Linux",
+          "restartPolicy": "Never",
+          "volumes": [
+            {
+            "name": "postgresdb",
+              "azureFile": {
+                "shareName": "[parameters('postgresdbFileshare')]",
+                "storageAccountName": "[parameters('Storageaccountname')]",
+                "storageAccountKey": "[parameters('storageKey')]"
+              }
+            }
+          ],
+          "ipAddress": {
+            "type": "Public",
+            "ports": [
+              {
+                "protocol": "tcp",
+                "port": 5432
+              }
+            ]
+          }
+        }
+      }
+    ],
+     "outputs": {
+    "containerIPv4Address": {
+      "type": "string",
+      "value": "[reference(resourceId('Microsoft.ContainerInstance/containerGroups/', parameters('containerGroupName'))).ipAddress.ip]"
+    }
+  }
+  }
