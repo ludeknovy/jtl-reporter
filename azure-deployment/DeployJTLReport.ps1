@@ -80,7 +80,7 @@ $postgres = New-AzResourceGroupDeployment -name "Migration" -ResourceGroupName $
 
 #Run other containers
 $postObj = @{ }
-$postObj.Add("containerGroupName", "jtlreportr")
+$postObj.Add("containerGroupName", "JtlReporter")
 $postObj.Add("Storageaccountname", $Storageaccountname)
 $postObj.Add("storageKey", $storageKey)
 $postObj.Add("JWT_TOKEN", $JWT_TOKEN)
