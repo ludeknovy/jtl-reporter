@@ -1,0 +1,82 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2019-04-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+      "containerGroupName": {
+        "type": "string",
+        "defaultValue": "migration"
+      },
+      "JWT_TOKEN": {
+        "type": "string",
+        "defaultValue": "27JU4qy73hchTMLoH8w9m"
+      },
+      "JWT_TOKEN_LOGIN": {
+        "type": "string",
+        "defaultValue": "GdK6TrCvX7rJRZJVg4ijt"
+      },
+      "DATABASE_URL": {
+        "type": "string",
+        "defaultValue": "postgres://postgres:postgres@127.0.0.1:5432/jtl_report"
+      }
+    },
+    "variables": {
+      "location": "northeurope"
+    },
+    "resources": [
+      {
+        "name": "[parameters('containerGroupName')]",
+        "type": "Microsoft.ContainerInstance/containerGroups",
+        "apiVersion": "2021-03-01",
+        "location": "[variables('location')]",
+        "properties": {
+          "containers": [
+            {
+              "name": "migration",
+              "properties": {
+                "image": "novyl/jtl-reporter-be:latest",
+                 "command": [ "/bin/sh", "-c", "npm run migrate up"  ],
+                "environmentVariables": [
+                {
+                  "name": "DATABASE_URL",
+                  "value": "[parameters('DATABASE_URL')]"
+                },
+                {
+                    "name": "JWT_TOKEN",
+                    "value": "[parameters('JWT_TOKEN')]"
+                },
+                {
+                    "name": "JWT_TOKEN_LOGIN",
+                    "value": "[parameters('JWT_TOKEN_LOGIN')]"
+                }
+                ],
+                "resources": {
+                  "requests": {
+                    "cpu": 0.5,
+                    "memoryInGb": 1
+                  }
+                },
+                "ports": [
+                {
+                  "port": 80
+                }
+              ]
+              }
+            }
+          ],
+          "osType": "Linux",
+          "restartPolicy": "Never",
+          "volumes": [
+          ],
+          "ipAddress": {
+            "type": "Public",
+            "ports": [
+              {
+                "protocol": "tcp",
+                "port": 80
+             }
+            ]
+          }
+        }
+      }
+    ]
+  }
