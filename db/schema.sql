@@ -95,6 +95,7 @@ ALTER TABLE jtl.samples OWNER TO postgres;
 CREATE TABLE jtl.monitor (
     "timestamp" timestamp without time zone NOT NULL,
     cpu numeric,
+    mem numeric,
     name text,
     item_id uuid
 );
