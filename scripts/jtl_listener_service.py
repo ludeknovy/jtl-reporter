@@ -23,7 +23,6 @@ class JtlListener:
             hostname: str = socket.gethostname(),
             timestamp_format="%Y-%m-%d %H:%M:%S",
     ):
-        print(env.host)
         self.env = env
         self.runner = self.env.runner
         self.project_name = project_name
@@ -53,11 +52,9 @@ class JtlListener:
         events.test_start.add_listener(self._test_start)
         events.test_stop.add_listener(self._test_stop)
 
-
     def _run(self):
         while True:
-            if len(self.results) >= self.flush_size:
-                print(self.cpu_usage)
+            if self.item_id and len(self.results) >= self.flush_size:
                 results_to_log = self.results[:self.flush_size]
                 cpu_usage_to_log = self.cpu_usage[:self.flush_size]
                 del self.results[:self.flush_size]
@@ -76,6 +73,8 @@ class JtlListener:
     def _master_cpu_monitor(self):
         while True:
             self.cpu_usage.append({ "name": "master", "cpu": self.get_cpu(), "timestamp": int(round(time() * 1000)) })
+            if self._finished:
+                break
             gevent.sleep(5)
 
     def _user_count(self):
@@ -115,13 +114,12 @@ class JtlListener:
             return response.json()
         except Exception:
             logging.error("Starting async item in Reporter failed")
-            logging.error(Exception)
             raise Exception
 
     def _log_results(self, results, cpu_usage):
         try:
             payload = {
-                "dataId": self.data_id,
+                "itemId": self.item_id,
                 "samples": results,
                 "monitor": cpu_usage,
 
@@ -129,11 +127,11 @@ class JtlListener:
             headers = {
                 "x-access-token": self.jwt_token
             }
-            requests.post(
-                f"{self.listener_url}/api/v1/test-run/log-samples", json=payload, headers=headers)
+            response = requests.post(
+                f"{self.listener_url}/api/v2/test-run/log-samples", json=payload, headers=headers)
 
         except Exception:
-            logging.error("Unable to to get token")
+            logging.error("Logging results failed")
             raise Exception
 
     def _stop_test_run(self):
@@ -144,23 +142,26 @@ class JtlListener:
             response = requests.post(
                 f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/{self.item_id}/stop-async",
                 headers=headers)
-            return response.json()
         except Exception:
-            logging.error(Exception)
+            logging.error("Stopping test run has failed")
             raise Exception
 
     def _test_start(self, *a, **kw):
-        if self._is_master():
-            self.jwt_token = self._login()
-            logging.info("Setting up background tasks")
-            self._finished = False
-            self._background = gevent.spawn(self._run)
-            self._background_master_monitor = gevent.spawn(self._master_cpu_monitor)
-            self._background_user = gevent.spawn(self._user_count)
+        if not self.is_worker():
+            try:
+                self.jwt_token = self._login()
+                response = self._start_test_run()
+                self.item_id = response["itemId"]
 
-        response = self._start_test_run()
-        self.data_id = response["dataId"]
-        self.item_id = response["itemId"]
+                logging.info("Setting up background tasks")
+                self._finished = False
+                self._background = gevent.spawn(self._run)
+                self._background_master_monitor = gevent.spawn(self._master_cpu_monitor)
+                self._background_user = gevent.spawn(self._user_count)
+                logging.info(response)
+            except Exception:
+                logging.error("Error while starting the test")
+                sys.exit(1)
 
     def _report_to_master(self, client_id, data):
         data["results"] = self.results
@@ -176,18 +177,19 @@ class JtlListener:
             self.cpu_usage.append(data["cpu_usage"])
 
     def _test_stop(self, *a, **kw):
-        sleep(5)  # wait for last reports to arrive
-        logging.info(
-            f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
-        self._finished = True
-        self._background.join(timeout=None)
-        self._background_user.join(timeout=None)
-        self._background_master_monitor.join(timeout=None)
-        logging.info(f"Results :::::: {len(self.results)}")
-        self._stop_test_run()
+        if not self.is_worker():
+            sleep(5)  # wait for last reports to arrive
+            logging.info(
+                f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
+            self._finished = True
+            self._background.join(timeout=5)
+            self._background_user.join(timeout=5)
+            self._background_master_monitor.join(timeout=None)
+            logging.info(f"Results :::::: {len(self.results)}")
+            self._stop_test_run()
 
     def add_result(self, success, _request_type, name, response_time, response_length, exception, **kw):
-        timestamp = str(int(round(time() * 1000)))
+        timestamp = int(round(time() * 1000))
         response_message = "OK" if success == "true" else "KO"
         status_code = kw["status_code"] if "status_code" in kw else "0"
         group_threads = str(self.runner.user_count)
@@ -206,8 +208,8 @@ class JtlListener:
             "bytes": str(response_length),
             "grpThreads": str(group_threads),
             "allThreads": str(all_threads),
-            "Latency": latency,
-            "Connect": connect,
+            "latency": latency,
+            "connect": connect,
         }
         self.results.append(result)
 
@@ -219,8 +221,8 @@ class JtlListener:
         self.add_result("false", request_type, name, response_time,
                         response_length, str(exception), **kw)
 
-    def _is_master(self):
-        return "--master" in sys.argv
+    def is_worker(self):
+        return "--worker" in sys.argv
 
     def get_cpu(self):
         return self.runner.current_cpu_usage
