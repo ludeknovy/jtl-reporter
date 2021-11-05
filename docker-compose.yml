@@ -43,7 +43,7 @@ services:
         condition: service_healthy
   
   listener:
-    image: novyl/jtl-reporter-listener-service:v2
+    image: novyl/jtl-reporter-listener-service:v2-edge
     ports:
       - "6000:6000"
     environment: 
