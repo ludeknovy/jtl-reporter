@@ -79,7 +79,7 @@ CREATE TABLE jtl.samples (
     sent_bytes integer,
     connect integer,
     hostname text,
-    status_code integer,
+    status_code text,
     all_threads integer,
     grp_threads integer,
     latency integer,
@@ -345,7 +345,7 @@ ALTER TABLE ONLY jtl.data
 
 
 ALTER TABLE ONLY jtl.monitor
-    ADD CONSTRAINT generator_monitor_item_id_fkey FOREIGN KEY (item_id) REFERENCES jtl.items(id);
+    ADD CONSTRAINT generator_monitor_item_id_fkey FOREIGN KEY (item_id) REFERENCES jtl.items(id) ON DELETE CASCADE;
 
 
 ALTER TABLE ONLY jtl.item_stat
