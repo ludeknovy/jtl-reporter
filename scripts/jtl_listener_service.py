@@ -44,9 +44,7 @@ class JtlListener:
         self.jwt_token = None
 
         events = self.env.events
-        events.request_success.add_listener(self._request_success)
-        events.request_failure.add_listener(self._request_failure)
-
+        events.request.add_listener(self._request)
         events.worker_report.add_listener(self._worker_report)
         events.report_to_master.add_listener(self._report_to_master)
         events.test_start.add_listener(self._test_start)
@@ -178,24 +176,24 @@ class JtlListener:
 
     def _test_stop(self, *a, **kw):
         if not self.is_worker():
-            sleep(5)  # wait for last reports to arrive
+            sleep(10)  # wait for last reports to arrive
             logging.info(
                 f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
             self._finished = True
             self._background.join(timeout=5)
             self._background_user.join(timeout=5)
             self._background_master_monitor.join(timeout=None)
-            logging.info(f"Results :::::: {len(self.results)}")
+            logging.info(f"Number of results not uploaded {len(self.results)}")
             self._stop_test_run()
 
-    def add_result(self, success, _request_type, name, response_time, response_length, exception, **kw):
+    def add_result(self, _request_type, name, response_time, response_length, response, context, exception):
         timestamp = int(round(time() * 1000))
-        response_message = "OK" if success == "true" else "KO"
-        status_code = kw["status_code"] if "status_code" in kw else "0"
+        response_message = response.reason
+        status_code = response.status_code
         group_threads = str(self.runner.user_count)
         all_threads = str(self.runner.user_count)
-        latency = kw["latency"] if "latency" in kw else 0
-        connect = kw["connect"] if "connect" in kw else 0
+        latency = 0
+        connect = 0
 
         result = {
             "timeStamp": timestamp,
@@ -203,7 +201,7 @@ class JtlListener:
             "label": name,
             "responseCode": str(status_code),
             "responseMessage": response_message,
-            "success": success,
+            "success": "false" if exception else "true",
             "failureMessage": exception,
             "bytes": str(response_length),
             "grpThreads": str(group_threads),
@@ -213,13 +211,9 @@ class JtlListener:
         }
         self.results.append(result)
 
-    def _request_success(self, request_type, name, response_time, response_length, **kw):
-        self.add_result("true", request_type, name,
-                        response_time, response_length, "", **kw)
-
-    def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
-        self.add_result("false", request_type, name, response_time,
-                        response_length, str(exception), **kw)
+    def _request(self, request_type, name, response_time, response_length, response, context, exception, **kw):
+        self.add_result(request_type, name,
+                        response_time, response_length, response, context, exception)
 
     def is_worker(self):
         return "--worker" in sys.argv
