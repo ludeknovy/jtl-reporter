@@ -378,11 +378,11 @@ ALTER TABLE ONLY jtl.share_tokens
 
 
 ALTER TABLE ONLY jtl.user_item_chart_settings
-    ADD CONSTRAINT user_item_chart_settings_item_id_fkey FOREIGN KEY (item_id) REFERENCES jtl.items(id);
+    ADD CONSTRAINT user_item_chart_settings_item_id_fkey FOREIGN KEY (item_id) REFERENCES jtl.items(id) ON DELETE CASCADE;
 
 
 ALTER TABLE ONLY jtl.user_item_chart_settings
-    ADD CONSTRAINT user_item_chart_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES jtl.users(id);
+    ADD CONSTRAINT user_item_chart_settings_user_id_fkey FOREIGN KEY (user_id) REFERENCES jtl.users(id) ON DELETE CASCADE;
 
 
 select * from pg_extension;
