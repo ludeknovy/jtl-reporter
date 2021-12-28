@@ -36,6 +36,8 @@ class JtlListener:
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._worker_id = f"{socket.gethostname()}_{os.getpid()}"
+        self.is_worker_runner = isinstance(self.env.runner, WorkerRunner)
+
 
         self.api_token = os.environ["JTL_API_TOKEN"]
         self.project_name = project_name

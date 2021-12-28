@@ -21,6 +21,7 @@ If applicable, add screenshots to help explain your problem.
 
 **Additional context**
 Add any other context about the problem here.
+You can get the logs by running: `docker logs <service_name>`
 
 **Did JtlReporter make you happay in any way?**
 Answering this question is not required, but if you have anything positive to share, please do so here.
