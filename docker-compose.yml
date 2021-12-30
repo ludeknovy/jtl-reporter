@@ -27,7 +27,7 @@ services:
   be:
     image: novyl/jtl-reporter-be:v4.0.0
     ports:
-      - "5050:5000"
+      - "5000:5000"
     environment:
       - DB_HOST=db
       - JWT_TOKEN=27JU4qy73hchTMLoH8w9m # please change this token
