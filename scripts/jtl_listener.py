@@ -2,7 +2,7 @@ from datetime import datetime
 from time import time, sleep
 from pathlib import Path
 from locust.runners import WorkerRunner
-import os
+import os, sys
 import requests
 import socket
 
@@ -40,7 +40,7 @@ class JtlListener:
         self.is_worker_runner = isinstance(self.env.runner, WorkerRunner)
 
 
-        self.api_token = os.environ['JTL_API_TOKEN']
+        self.api_token = os.environ["JTL_API_TOKEN"]
         self.project_name = project_name
         self.scenario_name = scenario_name
         self.environment = environment
@@ -62,20 +62,18 @@ class JtlListener:
             "Latency",
             "IdleTime",
             "Connect",
-            "Hostname"
+            "Hostname",
+            "failureMessage"
         ]
         self.user_count = 0
         events = self.env.events
-        events.request_success.add_listener(self._request_success)
-        events.request_failure.add_listener(self._request_failure)
-
-        if self.is_worker_runner:
+        events.request.add_listener(self._request)
+        if self.is_worker():
             events.report_to_master.add_listener(self._report_to_master)
         else:
+            events.test_start.add_listener(self._test_start)
+            events.test_stop.add_listener(self._test_stop)
             events.worker_report.add_listener(self._worker_report)
-
-        events.test_start.add_listener(self._test_start)
-        events.test_stop.add_listener(self._test_stop)
 
     def _test_start(self, *a, **kw):
         self._create_results_log()
@@ -85,16 +83,14 @@ class JtlListener:
         self.csv_results = []
 
     def _worker_report(self, client_id, data):
-        if 'csv' in data:
-            self.csv_results = data['csv']
-
-        if self.csv_results and len(self.csv_results) > 0:
+        self.csv_results += data["csv"]
+        if len(self.csv_results) >= self.flush_size:
             self._flush_to_log()
 
     def _create_results_log(self):
         self.filename = "results_" + \
-            datetime.fromtimestamp(time()).strftime(
-                self.results_timestamp_format) + ".csv"
+                        datetime.fromtimestamp(time()).strftime(
+                            self.results_timestamp_format) + ".csv"
         Path("logs/").mkdir(parents=True, exist_ok=True)
         results_file = open('logs/' + self.filename, "w")
         results_file.write(self.field_delimiter.join(
@@ -113,7 +109,8 @@ class JtlListener:
     def _test_stop(self, *a, environment):
         sleep(5)  # wait for last reports to arrive
         if self.results_file:
-            self._flush_to_log()
+            self.results_file.write(self.row_delimiter.join(
+                self.csv_results) + self.row_delimiter)
         if self.project_name and self.scenario_name and self.api_token and self.environment:
             try:
                 self._upload_file()
@@ -127,17 +124,17 @@ class JtlListener:
             status=(None, 1))
         url = '%s:5000/api/projects/%s/scenarios/%s/items' % (
             self.backend_url, self.project_name, self.scenario_name)
-        print(files)
         response = requests.post(url, files=files, headers={
-                                 'x-access-token': self.api_token})
+            'x-access-token': self.api_token})
         if response.status_code != 200:
             raise Exception("Upload failed: %s" % response.text)
 
-    def add_result(self, success, _request_type, name, response_time, response_length, exception, **kw):
+    def add_result(self, _request_type, name, response_time, response_length, response, context, exception, **kw):
         timestamp = str(int(round(time() * 1000)))
-        response_message = "OK" if success == "true" else "KO"
+        response_message: str = response.reason if "reason" in dir(response) else ""
+        status_code = response.status_code
+        success = "false" if exception else "true"
         # check to see if the additional fields have been populated. If not, set to a default value
-        status_code = kw["status_code"] if "status_code" in kw else "0"
         data_type = kw["data_type"] if "data_type" in kw else "unknown"
         bytes_sent = kw["bytes_sent"] if "bytes_sent" in kw else "0"
         group_threads = str(self.runner.user_count)
@@ -162,7 +159,8 @@ class JtlListener:
             latency,
             idle_time,
             connect,
-            hostname
+            hostname,
+            str(failureMessage)
         ]
         # Safe way to generate csv row up to RFC4180
         # https://datatracker.ietf.org/doc/html/rfc4180
@@ -170,13 +168,12 @@ class JtlListener:
         # Example: " -> ""
         csv_row_str = self.field_delimiter.join(['"' + x.replace('"', '""') + '"' for x in row])
         self.csv_results.append(csv_row_str)
-        if len(self.csv_results) >= self.flush_size and not self.is_worker_runner:
+        if len(self.csv_results) >= self.flush_size and not self.is_worker():
             self._flush_to_log()
 
-    def _request_success(self, request_type, name, response_time, response_length, **kw):
-        self.add_result("true", request_type, name,
-                        response_time, response_length, "", **kw)
+    def _request(self, request_type, name, response_time, response_length, response, context, exception, **kw):
+        self.add_result(request_type, name,
+                        response_time, response_length, response, context, exception)
 
-    def _request_failure(self, request_type, name, response_time, response_length, exception, **kw):
-        self.add_result("false", request_type, name, response_time,
-                        response_length, str(exception), **kw)
+    def is_worker(self):
+        return "--worker" in sys.argv

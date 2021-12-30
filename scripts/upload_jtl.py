@@ -40,7 +40,6 @@ note = get_note(args.exit_reason)
 
 files = dict(
     kpi=open(latest_folder + '/kpi.jtl', 'rb'),
-    errors=open(latest_folder + '/error.jtl', 'rb'),
     environment=(None, args.environment),
     status=(None, args.exit_code),
     note=(None, get_note(args.exit_reason))

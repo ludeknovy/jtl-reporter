@@ -2,21 +2,20 @@ version: '2.1'
 
 services:
   fe:
-    image: novyl/jtl-reporter-fe:v3.4.6
+    image: novyl/jtl-reporter-fe:v4.0.0
     ports:
      - "2020:80"
     depends_on:
       - db
       - be
-      - mongodb
 
   db:
-    image: novyl/jtl-reporter-db
+    container_name: jtl-reporter-db
     build:
       context: ./db/
       dockerfile: Dockerfile
     volumes:
-      - ./data/jtl_report:/var/lib/postgresql/data
+      - ./data/jtl_reporter_v4:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -25,43 +24,31 @@ services:
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
-  mongodb:
-    image: mongo:4.2.5-bionic
-    container_name: jtl-reporter-mongodb
-    environment:
-      - MONGO_INITDB_DATABASE=jtl-data
-    volumes: 
-      - ./data/jtl_report_mongo:/data/db
-      - ./mongodb/mongo-init.js:/docker-entrypoint-initdb.d/mongo-init.js:ro
-    ports: 
-      - "27020:27017"
-
   be:
-    image: novyl/jtl-reporter-be:v3.4.2
+    image: novyl/jtl-reporter-be:v4.0.0
     ports:
       - "5000:5000"
     environment:
       - DB_HOST=db
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
       - JWT_TOKEN=27JU4qy73hchTMLoH8w9m # please change this token
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be:v3.4.2
+    image: novyl/jtl-reporter-be:v4.0.0
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
     command: npm run migrate up
     depends_on:
       db:
         condition: service_healthy
-  
+
   listener:
-    image: novyl/jtl-reporter-listener-service:v1.0.1
+    image: novyl/jtl-reporter-listener-service:v2.0.1
     ports:
       - "6000:6000"
-    environment: 
-      - MONGO_CONNECTION_STRING=mongodb://mongodb:27017
+    environment:
+      - DB_HOST=db
       - JWT_TOKEN=GdK6TrCvX7rJRZJVg4ijt # paste the same token as in be service - JWT_TOKEN_LOGIN
-    
-    
+
+
 

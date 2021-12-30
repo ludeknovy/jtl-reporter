@@ -28,12 +28,23 @@ Online reporting application to generate reports from JMeter(Taurus), Locust and
   $ http://IP_ADDRESS:2020
   ```
 
-5. Default credentials
+## Migration from v3 to v4
+* Shut down the app but leave DB (postgres) running
+* Backup you v3 DB!
+* Run following query to modify the DB schema:
+```
+ALTER TABLE jtl.items 
+DROP COLUMN data_id;
+```
+* Dump all of your data by running:
+```
+docker exec -t <container_name> pg_dumpall -a -U postgres > backup_v3.sql
+```
 
-  ```
-  username: admin
-  password: 2Txnf5prDknTFYTVEXjj
-  ```
+* Import the data to v4 DB (make sure the DB is up):
+```
+docker exec -i <container_name>  psql -U postgres -d jtl_report < backup_v3.sql
+```
   
 ## Documentation 📖
 For additional information please refer to the [documentation](https://jtlreporter.site/docs/).
