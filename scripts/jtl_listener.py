@@ -1,6 +1,7 @@
 from datetime import datetime
 from time import time, sleep
 from pathlib import Path
+from locust.runners import WorkerRunner
 import os, sys
 import requests
 import socket
@@ -61,7 +62,8 @@ class JtlListener:
             "Latency",
             "IdleTime",
             "Connect",
-            "Hostname"
+            "Hostname",
+            "failureMessage"
         ]
         self.user_count = 0
         events = self.env.events
@@ -157,7 +159,8 @@ class JtlListener:
             latency,
             idle_time,
             connect,
-            hostname
+            hostname,
+            str(failureMessage)
         ]
         # Safe way to generate csv row up to RFC4180
         # https://datatracker.ietf.org/doc/html/rfc4180

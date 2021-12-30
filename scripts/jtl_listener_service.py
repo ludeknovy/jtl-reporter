@@ -202,7 +202,7 @@ class JtlListener:
             "responseCode": str(status_code),
             "responseMessage": response_message,
             "success": "false" if exception else "true",
-            "failureMessage": exception,
+            "failureMessage": str(exception),
             "bytes": str(response_length),
             "grpThreads": str(group_threads),
             "allThreads": str(all_threads),
