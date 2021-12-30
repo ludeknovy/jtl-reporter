@@ -46,8 +46,8 @@ docker exec -t <container_name> pg_dumpall -a -U postgres > backup_v3.sql
 docker exec -i <container_name>  psql -U postgres -d jtl_report < backup_v3.sql
 ```
 
-If you use Taurus, see the needed changes in [upload script](https://github.com/ludeknovy/jtl-reporter/commit/ed477855c06cd790538c48d87b4fd6887729be33#diff-3b9f9f6188c06faceab5ea1d052c0a767a1e1925dce66fdc68e2ffcbe5c2aa3dL43
-)
+If you use **Taurus**, see the needed changes in [upload script](https://github.com/ludeknovy/jtl-reporter/commit/ed477855c06cd790538c48d87b4fd6887729be33#diff-3b9f9f6188c06faceab5ea1d052c0a767a1e1925dce66fdc68e2ffcbe5c2aa3dL43
+).
   
 ## Documentation 📖
 For additional information please refer to the [documentation](https://jtlreporter.site/docs/).
