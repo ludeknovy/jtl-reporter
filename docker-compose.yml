@@ -49,6 +49,9 @@ services:
     environment:
       - DB_HOST=db
       - JWT_TOKEN=GdK6TrCvX7rJRZJVg4ijt # paste the same token as in be service - JWT_TOKEN_LOGIN
-
-
+  
+  scheduler:
+    image: novyl/jtl-reporter-scheduler:v0.0.2
+    environment:
+      - DB_HOST=db
 
