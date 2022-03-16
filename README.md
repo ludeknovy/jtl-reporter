@@ -57,6 +57,7 @@ For additional information please refer to the [documentation](https://jtlreport
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
   * [frontend](https://github.com/ludeknovy/jtl-reporter-fe)
   * [listener](https://github.com/ludeknovy/jtl-reporter-listener-service)
+  * [scheduler](https://github.com/ludeknovy/jtl-reporter-scheduler)
   * [docs](https://github.com/ludeknovy/jtl-reporter-docs)
 
 
