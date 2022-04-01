@@ -160,7 +160,7 @@ class JtlListener:
             idle_time,
             connect,
             hostname,
-            str(failureMessage)
+            str(exception)
         ]
         # Safe way to generate csv row up to RFC4180
         # https://datatracker.ietf.org/doc/html/rfc4180
