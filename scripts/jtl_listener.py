@@ -107,7 +107,11 @@ class JtlListener:
         self.csv_results = []
 
     def _test_stop(self, *a, environment):
-        sleep(5)  # wait for last reports to arrive
+        # wait for last reports to arrive
+        sleep(5)
+        # final writing a data and clearing self.csv_results between restarts
+        if not self.is_worker():
+            self._flush_to_log()
         if self.results_file:
             self.results_file.write(self.row_delimiter.join(
                 self.csv_results) + self.row_delimiter)
@@ -131,7 +135,7 @@ class JtlListener:
 
     def add_result(self, _request_type, name, response_time, response_length, response, context, exception, **kw):
         timestamp = str(int(round(time() * 1000)))
-        response_message: str = response.reason if "reason" in dir(response) else ""
+        response_message = str(response.reason) if "reason" in dir(response) else ""
         status_code = response.status_code
         success = "false" if exception else "true"
         # check to see if the additional fields have been populated. If not, set to a default value
