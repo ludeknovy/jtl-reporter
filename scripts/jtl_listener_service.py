@@ -188,7 +188,7 @@ class JtlListener:
 
     def add_result(self, _request_type, name, response_time, response_length, response, context, exception):
         timestamp = int(round(time() * 1000))
-        response_message: str = response.reason if "reason" in dir(response) else ""
+        response_message = str(response.reason) if "reason" in dir(response) else ""
         status_code = response.status_code
         group_threads = str(self.runner.user_count)
         all_threads = str(self.runner.user_count)
