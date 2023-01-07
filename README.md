@@ -52,6 +52,11 @@ If you use **Taurus**, see the needed changes in [upload script](https://github.
 ## Documentation 📖
 For additional information please refer to the [documentation](https://jtlreporter.site/docs/).
 
+## Analytics 
+Currently, only one metric is collected - every 24 hours the backend application sends and event that the instance is alive. 
+If you dont want the analytics to be used, you can set `OPT_OUT_ANALYTICS` to `true` for backend service.
+
+
 ## Repositories structure
  JtlReporter consists of the following parts:
   * [backend](https://github.com/ludeknovy/jtl-reporter-be)
