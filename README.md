@@ -55,6 +55,7 @@ For additional information please refer to the [documentation](https://jtlreport
 ## Analytics 
 Currently, only one metric is collected - every 6 hours the backend application sends and event that the instance is alive. 
 If you dont want the analytics to be used, you can set `OPT_OUT_ANALYTICS` to `true` for backend service.
+Mixpanel service is used for storing the data.
 
 
 ## Repositories structure
