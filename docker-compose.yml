@@ -37,12 +37,11 @@ services:
     image: novyl/jtl-reporter-be:v4.6.0
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
+        - OPT_OUT_ANALYTICS=true
     command: npm run migrate up
     depends_on:
       db:
         condition: service_healthy
-    environment:
-      - OPT_OUT_ANALYTICS=true
     
   listener:
     image: novyl/jtl-reporter-listener-service:v2.0.6
