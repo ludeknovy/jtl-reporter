@@ -2,7 +2,7 @@ version: '2.1'
 
 services:
   fe:
-    image: novyl/jtl-reporter-fe:v4.6.0
+    image: novyl/jtl-reporter-fe:v4.6.1
     ports:
      - "2020:80"
     depends_on:
