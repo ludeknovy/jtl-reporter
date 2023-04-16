@@ -13,6 +13,9 @@ Online reporting application to generate reports from JMeter(Taurus), Locust and
 * Performance insights
 * [and more](https://jtlreporter.site/docs/introduction/features).
 
+## Used By
+<img src="/assets/Logo-RedHat-A-Color-RGB.svg"  width="200" height="150">
+
 ## Installation steps
 1. Install [Docker](https://docs.docker.com/engine/installation/) ([Engine](https://docs.docker.com/engine/installation/), [Compose](https://docs.docker.com/compose/install/))
 2. Clone this repository and navigate into cloned folder
