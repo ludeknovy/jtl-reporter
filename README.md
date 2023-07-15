@@ -62,8 +62,9 @@ For additional information please refer to the [documentation](https://jtlreport
 Currently, the following metrics are collected:
  * every 6 hours the backend application sends an event that the instance is alive
  * report processing is finished
+ * the number of labels and duration of the test run
  
- If you dont want the analytics to be used, you can set `OPT_OUT_ANALYTICS` to `true` for backend service.
+ If you don't want the analytics to be used, you can set `OPT_OUT_ANALYTICS` to `true` for backend service.
 Mixpanel service is used for storing the data.
 
 
