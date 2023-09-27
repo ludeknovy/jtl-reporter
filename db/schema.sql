@@ -185,6 +185,12 @@ CREATE TABLE jtl.projects (
 
 ALTER TABLE jtl.projects OWNER TO postgres;
 
+CREATE TABLE jtl.user_project_access (
+    project_id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
+    user_id uuid DEFAULT public.uuid_generate_v4() NOT NULL
+);
+
+ALTER TABLE jtl.user_project_access OWNER TO postgres;
 
 
 CREATE TABLE jtl.scenario (
@@ -227,6 +233,7 @@ CREATE TABLE jtl.users (
     id uuid DEFAULT public.uuid_generate_v4() NOT NULL,
     username character varying(100),
     password character varying(100),
+    role character varying(100),
     create_date timestamp without time zone DEFAULT CURRENT_TIMESTAMP NOT NULL
 );
 
@@ -386,7 +393,6 @@ ALTER TABLE ONLY jtl.user_item_chart_settings
 
 
 select * from pg_extension;
-
 
 
 SELECT public.create_hypertable('jtl.samples', 'timestamp');
