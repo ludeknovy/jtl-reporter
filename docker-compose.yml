@@ -25,7 +25,7 @@ services:
       - POSTGRES_HOST_AUTH_METHOD=trust
 
   be:
-    image: novyl/jtl-reporter-be:v4.10.1
+    image: novyl/jtl-reporter-be:v4.10.2
     ports:
       - "5000:5000"
     environment:
@@ -34,7 +34,7 @@ services:
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be:v4.10.1
+    image: novyl/jtl-reporter-be:v4.10.2
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
         - OPT_OUT_ANALYTICS=true
