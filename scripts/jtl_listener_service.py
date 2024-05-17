@@ -134,6 +134,7 @@ class JtlListener:
 
     def _stop_test_run(self):
         try:
+            ## If you want to set the status, please check: https://jtlreporter.site/docs/integrations/samples-streaming#4-stop-the-test-run
             headers = {
                 "x-access-token": self.api_token
             }
