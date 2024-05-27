@@ -1,18 +1,21 @@
-import gevent
-import gevent.monkey
-import socket
-
 from time import sleep, time
-import requests
-import logging
 from typing import List
-import sys
-import os
+from gevent.queue import Queue
+import gevent, gevent.monkey, os, json, sys, logging, requests, socket
 
 
 class JtlListener:
     # holds results until processed
     results: List[dict] = []
+
+    # holds cpu metrics until processed
+    cpu_usage = []
+
+    # dequeuers
+    _background_dequeuers = []
+
+    # Each item in queue have 500 results
+    queue = Queue()
 
     def __init__(
             self,
@@ -34,8 +37,12 @@ class JtlListener:
         self.listener_url = f"{self.backend_url}:6000"
         # a timestamp format, others could be added...
         self.timestamp_format = timestamp_format
-        # how many records should be held before flushing to disk
+        # how many records should be held before flushing
         self.flush_size = 500
+        self.dequeuers_config = {
+            "max_threads": 50,
+            "send_interval": 1
+        }
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._finished = False
@@ -50,6 +57,33 @@ class JtlListener:
         events.test_start.add_listener(self._test_start)
         events.test_stop.add_listener(self._test_stop)
 
+    def _enqueue_results(self, results, cpu_usage):
+        self.queue.put_nowait({
+                "itemId": self.item_id,
+                "samples": results,
+                "monitor": cpu_usage,
+            })
+        
+    def _dequeue_results(self, name):
+        while True:
+            gevent.sleep(self.dequeuers_config["send_interval"])
+            try:
+                self._log_results(payload=self.queue.get(timeout=10))
+            except:
+                if len(self._background_dequeuers)>1 or self._finished:
+                    logging.info(f"Stoping jtl-reporter {name}")
+                    break
+
+    def _update_dequeuers_threads_quantity(self):
+        while not self._finished:
+            gevent.sleep(1)
+            len_dequeuers = len(self._background_dequeuers)
+            if self.queue.qsize() > 10 or len_dequeuers == 0:
+                if len_dequeuers < self.dequeuers_config["max_threads"]:
+                        name = f"sender {len_dequeuers+1}"
+                        logging.info(f"Starting jtl-reporter {name}")
+                        self._background_dequeuers.append(gevent.spawn(self._dequeue_results,name))
+
     def _run(self):
         while True:
             if self.item_id and len(self.results) >= self.flush_size:
@@ -57,12 +91,12 @@ class JtlListener:
                 cpu_usage_to_log = self.cpu_usage[:self.flush_size]
                 del self.results[:self.flush_size]
                 del self.cpu_usage[:self.flush_size]
-                self._log_results(results_to_log, cpu_usage_to_log)
+                self._enqueue_results(results_to_log, cpu_usage_to_log)
             else:
                 if self._finished:
                     results_len = len(self.results)
                     cpu_usage_len = len(self.cpu_usage)
-                    self._log_results(self.results, self.cpu_usage)
+                    self._enqueue_results(self.results, self.cpu_usage)
                     del self.results[:results_len]
                     del self.cpu_usage[:cpu_usage_len]
                     break
@@ -114,14 +148,8 @@ class JtlListener:
             logging.error("Starting async item in Reporter failed")
             raise Exception
 
-    def _log_results(self, results, cpu_usage):
+    def _log_results(self, payload):
         try:
-            payload = {
-                "itemId": self.item_id,
-                "samples": results,
-                "monitor": cpu_usage,
-
-            }
             headers = {
                 "x-access-token": self.jwt_token
             }
@@ -138,9 +166,13 @@ class JtlListener:
             headers = {
                 "x-access-token": self.api_token
             }
+            body = {
+                "status": "0"
+            }
             response = requests.post(
                 f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/{self.item_id}/stop-async",
-                headers=headers)
+                headers=headers,
+                json=body)
         except Exception:
             logging.error("Stopping test run has failed")
             raise Exception
@@ -157,6 +189,8 @@ class JtlListener:
                 self._background = gevent.spawn(self._run)
                 self._background_master_monitor = gevent.spawn(self._master_cpu_monitor)
                 self._background_user = gevent.spawn(self._user_count)
+                self._background_dequeuers_threads_updater = gevent.spawn(self._update_dequeuers_threads_quantity)
+
                 logging.info(response)
             except Exception:
                 logging.error("Error while starting the test")
@@ -181,10 +215,18 @@ class JtlListener:
             logging.info(
                 f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
             self._finished = True
-            self._background.join(timeout=5)
-            self._background_user.join(timeout=5)
-            self._background_master_monitor.join(timeout=None)
-            logging.info(f"Number of results not uploaded {len(self.results)}")
+            self._background.join()
+            self._background_user.join()
+            self._background_master_monitor.join()
+            gevent.joinall(self._background_dequeuers)
+            gevent.kill(self._background)
+            gevent.kill(self._background_user)
+            gevent.kill(self._background_master_monitor)
+            gevent.kill(self._background_dequeuers_threads_updater)
+            gevent.killall(self._background_dequeuers)
+            self._background_dequeuers.clear()
+            logging.info(f"Number of unqueued results {len(self.results)}")
+            logging.info(f"Number of results not sent {self.queue.qsize()}")
             self._stop_test_run()
 
     def add_result(self, _request_type, name, response_time, response_length, response, context, exception):
