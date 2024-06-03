@@ -1,18 +1,24 @@
-import gevent
-import gevent.monkey
-import socket
-
 from time import sleep, time
-import requests
-import logging
 from typing import List
-import sys
-import os
+from gevent.queue import Queue
+import gevent, gevent.monkey, os, sys, logging, requests, socket
 
 
 class JtlListener:
     # holds results until processed
     results: List[dict] = []
+
+    # holds cpu metrics until processed
+    cpu_usage = []
+
+    # Queue procesors
+    _background_senders = []
+    _background_receivers = []
+
+    # Queues
+    payloads = Queue()
+    results_queue = Queue()
+    cpu_usage_queue = Queue()
 
     def __init__(
             self,
@@ -32,10 +38,30 @@ class JtlListener:
         self.api_token = os.environ["JTL_API_TOKEN"]
         self.be_url = f"{self.backend_url}:5000"
         self.listener_url = f"{self.backend_url}:6000"
+
         # a timestamp format, others could be added...
         self.timestamp_format = timestamp_format
-        # how many records should be held before flushing to disk
+        
+        # how many records will be sent at once?
         self.flush_size = 500
+
+        # how many senders threads can it have at most?
+        self.senders_max_threads = 30
+
+        # how many receivers threads can it have at most?
+        self.receivers_max_threads = 30
+
+        # how often will the senders threads send in seconds?
+        self.senders_interval = 1
+
+        # how often will the receivers threads send in seconds?
+        self.receivers_interval = 1
+
+        # how many times will the "flush_size" be collected to queue results?
+        # he higher the multiplier, the ability to receive results increases.
+        # x3 is tested at up to 20,000 TPS
+        self.enqueue_grouping = 3
+
         # results filename format
         self.results_timestamp_format = "%Y_%m_%d_%H_%M_%S"
         self._finished = False
@@ -50,19 +76,99 @@ class JtlListener:
         events.test_start.add_listener(self._test_start)
         events.test_stop.add_listener(self._test_stop)
 
-    def _run(self):
+    def _send(self, name):
+        # concurrent greenlets will use this method to take queued payloads and send them to jtl-reporter-listener.
         while True:
-            if self.item_id and len(self.results) >= self.flush_size:
-                results_to_log = self.results[:self.flush_size]
-                cpu_usage_to_log = self.cpu_usage[:self.flush_size]
-                del self.results[:self.flush_size]
-                del self.cpu_usage[:self.flush_size]
-                self._log_results(results_to_log, cpu_usage_to_log)
+            gevent.sleep(self.senders_interval)
+            try:
+                self._log_results(payload=self.payloads.get(timeout=10))
+            except:
+                if self._finished:
+                    logging.info(f"Stoping jtl-reporter {name}")
+                    break
+
+    def _receive(self, name):
+        # concurrent greenlets will use this method to take the enqueued results and enqueue them as sendable payloads
+        while True:
+            gevent.sleep(self.receivers_interval)
+            try:
+                results = self.results_queue.get(timeout=10)
+                try:
+                    cpu_usage = self.cpu_usage_queue.get(timeout=10)
+                except:
+                    cpu_usage=[]
+
+                while True:
+                    if len(results) > 0:
+                        results_to_log = results[:self.flush_size]
+                        cpu_usage_to_log = cpu_usage[:self.flush_size]
+                        del results[:self.flush_size]
+                        del cpu_usage[:self.flush_size]
+                        self.payloads.put_nowait({
+                            "itemId": self.item_id,
+                            "samples": results_to_log,
+                            "monitor": cpu_usage_to_log,
+                        })
+                    else:
+                        break
+                    gevent.sleep(0.05)
+            except:
+                if self._finished:
+                    logging.info(f"Stoping jtl-reporter {name}")
+                    break
+
+    def _senders_manage(self):
+        # this method for a greenlet running in the background increases the number of threads preventing the payloads queue from growing
+        logging.info(f"Starting jtl-reporter sender manager")
+        while True:
+            gevent.sleep(1)
+            len_senders = len(self._background_senders)
+            if self.payloads.qsize() > 10 or len_senders == 0:
+                if len_senders < self.senders_max_threads:
+                    name = f"sender {len_senders+1}"
+                    logging.info(f"Starting jtl-reporter {name}")
+                    self._background_senders.append(gevent.spawn(self._send,name))
+                else:
+                    logging.info(f"Senders limit (senders_max_threads={self.senders_max_threads}) reached.\n Payloads queue size: {self.payloads.qsize()}")
+            if self._finished:
+                logging.info(f"Stoping jtl-reporter sender manager")
+                break
+    
+    def _receivers_manage(self):
+        # this method for a greenlet running in the background increases the number of threads preventing the results queue from growing
+        logging.info(f"Starting jtl-reporter receiver manager")
+        while True:
+            gevent.sleep(1)
+            len_receivers = len(self._background_receivers)
+            if self.results_queue.qsize() > 10 or len_receivers == 0:
+                if len_receivers < self.receivers_max_threads:
+                    name = f"receiver {len_receivers+1}"
+                    logging.info(f"Starting jtl-reporter {name}")
+                    self._background_receivers.append(gevent.spawn(self._receive,name))
+                else:
+                    logging.info(f"Receivers limit (receivers_max_threads={self.receivers_max_threads}) reached.\n Results queue size: {self.results_queue.qsize()}")
+            if self._finished:
+                logging.info(f"Stoping jtl-reporter receiver manager")
+                break
+        
+    def _enqueue(self):
+        # this method for a greenlet background receives the results from the workers and queues them
+        while True:
+            # to increase receiving capacity, apply a flush_size multiplier.
+            flush_size = self.flush_size * self.enqueue_grouping
+            if self.item_id and len(self.results) >= flush_size:
+                results_to_log = self.results[:flush_size]
+                cpu_usage_to_log = self.cpu_usage[:flush_size]
+                del self.results[:flush_size]
+                del self.cpu_usage[:flush_size]
+                self.results_queue.put_nowait(results_to_log)
+                self.cpu_usage_queue.put_nowait(cpu_usage_to_log)
             else:
                 if self._finished:
                     results_len = len(self.results)
                     cpu_usage_len = len(self.cpu_usage)
-                    self._log_results(self.results, self.cpu_usage)
+                    self.results_queue.put_nowait(self.results[:])
+                    self.cpu_usage_queue.put_nowait(self.cpu_usage[:])
                     del self.results[:results_len]
                     del self.cpu_usage[:cpu_usage_len]
                     break
@@ -114,14 +220,8 @@ class JtlListener:
             logging.error("Starting async item in Reporter failed")
             raise Exception
 
-    def _log_results(self, results, cpu_usage):
+    def _log_results(self, payload):
         try:
-            payload = {
-                "itemId": self.item_id,
-                "samples": results,
-                "monitor": cpu_usage,
-
-            }
             headers = {
                 "x-access-token": self.jwt_token
             }
@@ -138,9 +238,13 @@ class JtlListener:
             headers = {
                 "x-access-token": self.api_token
             }
+            body = {
+                "status": "0"
+            }
             response = requests.post(
                 f"{self.be_url}/api/projects/{self.project_name}/scenarios/{self.scenario_name}/items/{self.item_id}/stop-async",
-                headers=headers)
+                headers=headers,
+                json=body)
         except Exception:
             logging.error("Stopping test run has failed")
             raise Exception
@@ -154,9 +258,12 @@ class JtlListener:
 
                 logging.info("Setting up background tasks")
                 self._finished = False
-                self._background = gevent.spawn(self._run)
+                self._background_enqueuer = gevent.spawn(self._enqueue)
                 self._background_master_monitor = gevent.spawn(self._master_cpu_monitor)
                 self._background_user = gevent.spawn(self._user_count)
+                self._background_senders_manager = gevent.spawn(self._senders_manage)
+                self._background_receivers_manager = gevent.spawn(self._receivers_manage)
+
                 logging.info(response)
             except Exception:
                 logging.error("Error while starting the test")
@@ -178,13 +285,23 @@ class JtlListener:
     def _test_stop(self, *a, **kw):
         if not self.is_worker():
             sleep(10)  # wait for last reports to arrive
-            logging.info(
-                f"Test is stopping, number of remaining results to be uploaded yet: {len(self.results)}")
+            logging.info(f"Test is stopping")
+            logging.info(f"Number of results yet to be enqueued: {len(self.results)}")
+            logging.info(f"Number of results still enqueued: {self.results_queue.qsize()}")
+            logging.info(f"Number of payloads yet to be sent: {self.payloads.qsize()}")
             self._finished = True
-            self._background.join(timeout=5)
-            self._background_user.join(timeout=5)
-            self._background_master_monitor.join(timeout=None)
-            logging.info(f"Number of results not uploaded {len(self.results)}")
+            self._background_user.join()
+            self._background_master_monitor.join()
+            self._background_enqueuer.join()
+            gevent.joinall(self._background_receivers)
+            gevent.joinall(self._background_senders)
+            self._background_receivers_manager.join()
+            self._background_senders_manager.join()
+            self._background_receivers.clear()
+            self._background_senders.clear()
+            logging.info(f"Number of results not enqueued: {len(self.results)}")
+            logging.info(f"Number of results in queue: {self.results_queue.qsize()}")
+            logging.info(f"Number of payloads not sent: {self.payloads.qsize()}")
             self._stop_test_run()
 
     def add_result(self, _request_type, name, response_time, response_length, response, context, exception):
@@ -221,4 +338,3 @@ class JtlListener:
 
     def get_cpu(self):
         return self.runner.current_cpu_usage
-
