@@ -93,7 +93,10 @@ class JtlListener:
             gevent.sleep(self.receivers_interval)
             try:
                 results = self.results_queue.get(timeout=10)
-                cpu_usage = self.cpu_usage_queue.get(timeout=10)
+                try:
+                    cpu_usage = self.cpu_usage_queue.get(timeout=10)
+                except:
+                    cpu_usage=[]
 
                 while True:
                     if len(results) > 0:
@@ -164,8 +167,8 @@ class JtlListener:
                 if self._finished:
                     results_len = len(self.results)
                     cpu_usage_len = len(self.cpu_usage)
-                    self.results_queue.put_nowait(self.results)
-                    self.cpu_usage_queue.put_nowait(self.cpu_usage)
+                    self.results_queue.put_nowait(self.results[:])
+                    self.cpu_usage_queue.put_nowait(self.cpu_usage[:])
                     del self.results[:results_len]
                     del self.cpu_usage[:cpu_usage_len]
                     break
