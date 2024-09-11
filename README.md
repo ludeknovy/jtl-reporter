@@ -64,3 +64,7 @@ Mixpanel service is used for storing the data.
 Jtl Reporter is GNU Affero General Public License v3.0 licensed ([frontend](https://github.com/ludeknovy/jtl-reporter-fe/blob/master/LICENSE), [backend](https://github.com/ludeknovy/jtl-reporter-be/blob/master/LICENSE) and [listener](https://github.com/ludeknovy/jtl-reporter-listener-service/blob/main/LICENSE)). 
 
 This repository is [MIT licensed.](LICENSE)
+
+The new version uses different DB image (timescale/timescaledb-ha) https://github.com/timescale/timescaledb-docker-ha
+The `timescale/timescaledb-ha` contains a toolkit, which is not distributed as OSS, but under a TSL.
+For more information, please see https://docs.timescale.com/about/latest/timescaledb-editions/#timescaledb-community-edition

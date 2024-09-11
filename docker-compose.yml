@@ -1,8 +1,15 @@
 version: '2.1'
 
+## !!! Warning if you are upgrading from v4 !!!
+## Please make sure you back up your data before the upgrade.
+## See https://jtlreporter.site/docs/guides/backup-and-restore-database
+## The new version uses different DB image (timescale/timescaledb-ha) https://github.com/timescale/timescaledb-docker-ha
+## The timescale/timescaledb-ha contains toolkit, which is not distributed as OSS, but as a TSL,
+## Please see https://docs.timescale.com/about/latest/timescaledb-editions/#timescaledb-community-edition
+
 services:
   fe:
-    image: novyl/jtl-reporter-fe:v4.10.1
+    image: novyl/jtl-reporter-fe:v4.10.2
     ports:
      - "2020:80"
     depends_on:
@@ -15,7 +22,7 @@ services:
       context: ./db/
       dockerfile: Dockerfile
     volumes:
-      - ./data/jtl_reporter_v4:/var/lib/postgresql/data
+      - ./data/jtl_reporter_v5:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -23,9 +30,12 @@ services:
       retries: 10
     environment:
       - POSTGRES_HOST_AUTH_METHOD=trust
+    ports:
+      - "5432:5432"
+
 
   be:
-    image: novyl/jtl-reporter-be:v4.10.3
+    image: novyl/jtl-reporter-be:v5.0.0
     ports:
       - "5000:5000"
     environment:
@@ -34,7 +44,7 @@ services:
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be:v4.10.3
+    image: novyl/jtl-reporter-be:v5.0.0
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
         - OPT_OUT_ANALYTICS=true
@@ -42,7 +52,7 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    
+
   listener:
     image: novyl/jtl-reporter-listener-service:v2.1.2
     ports:
@@ -50,7 +60,7 @@ services:
     environment:
       - DB_HOST=db
       - JWT_TOKEN=GdK6TrCvX7rJRZJVg4ijt # paste the same token as in be service - JWT_TOKEN_LOGIN
-  
+
   scheduler:
     image: novyl/jtl-reporter-scheduler:v0.0.8
     environment:
