@@ -170,7 +170,7 @@ class JtlListener:
 
     def _report_to_master(self, client_id, data):
         data["results"] = self.results
-        data["cpu_usage"] = {  "name": client_id, "timestamp": int(round(time() * 1000)) , "cpu": self.get_cpu() }
+        data["cpu_usage"] = {"name": client_id, "timestamp": int(round(time() * 1000)), "cpu": self.get_cpu(), "mem": self.get_memory_usage()}
         self.results = []
 
     def _worker_report(self, client_id, data):
