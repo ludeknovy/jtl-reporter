@@ -70,7 +70,13 @@ class JtlListener:
 
     def _master_cpu_monitor(self):
         while True:
-            self.cpu_usage.append({ "name": "master", "cpu": self.get_cpu(), "timestamp": int(round(time() * 1000)) })
+            self.cpu_usage.append(
+                {"name": "master",
+                 "cpu": self.get_cpu(),
+                 "mem": self.get_memory_usage(),
+                 "timestamp": int(round(time() * 1000))
+                 }
+            )
             if self._finished:
                 break
             gevent.sleep(5)
@@ -126,7 +132,7 @@ class JtlListener:
                 "x-access-token": self.jwt_token
             }
             response = requests.post(
-                f"{self.listener_url}/api/v2/test-run/log-samples", json=payload, headers=headers)
+                f"{self.listener_url}/api/v4/test-run/log-samples", json=payload, headers=headers)
 
         except Exception:
             logging.error("Logging results failed")
@@ -221,4 +227,8 @@ class JtlListener:
 
     def get_cpu(self):
         return self.runner.current_cpu_usage
+
+    def get_memory_usage(self):
+        return self.runner.current_memory_usage
+
 
