@@ -12,7 +12,8 @@ We release patches for security vulnerabilities.
 
 | Version | Supported          |
 | ------- | ------------------ |
-| v4   | :white_check_mark: |
+| v5   | :white_check_mark: |
+| v4   | :x: |
 | v3   | :x:                |
 
 ## Reporting a Vulnerability
