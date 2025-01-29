@@ -35,7 +35,7 @@ services:
 
 
   be:
-    image: novyl/jtl-reporter-be:v5.0.2
+    image: novyl/jtl-reporter-be:v5.0.4
     ports:
       - "5000:5000"
     environment:
@@ -44,7 +44,7 @@ services:
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be:v5.0.2
+    image: novyl/jtl-reporter-be:v5.0.4
     environment:
         - DATABASE_URL=postgres://postgres@db/jtl_report
         - OPT_OUT_ANALYTICS=true
