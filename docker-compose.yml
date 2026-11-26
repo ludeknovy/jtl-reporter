@@ -2,7 +2,7 @@ version: '2.1'
 
 ## !!! Warning if you are upgrading from v4 !!!
 ## Please make sure you back up your data before the upgrade.
-## See https://jtlreporter.site/docs/guides/backup-and-restore-database
+## See https://jtlreporter.com/docs/guides/backup-and-restore-database
 ## The new version uses different DB image (timescale/timescaledb-ha) https://github.com/timescale/timescaledb-docker-ha
 ## The timescale/timescaledb-ha contains toolkit, which is not distributed as OSS, but as a TSL,
 ## Please see https://docs.timescale.com/about/latest/timescaledb-editions/#timescaledb-community-edition

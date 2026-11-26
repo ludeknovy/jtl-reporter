@@ -1,7 +1,6 @@
 
 - [Security Policy](#security-policy)
   - [Supported Versions](#supported-versions)
-  - [Reporting a Vulnerability](#reporting-a-vulnerability)
 
 
 # Security Policy
@@ -16,8 +15,3 @@ We release patches for security vulnerabilities.
 | v4   | :x: |
 | v3   | :x:                |
 
-## Reporting a Vulnerability
-
-Please report (suspected) security vulnerabilities to
-**[ludek@jtlreporter.site](mailto:ludek@jtlreporter.site)**. If the issue is confirmed, we will release a patch as soon
-as possible depending on complexity.

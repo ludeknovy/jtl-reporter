@@ -11,7 +11,7 @@ Online reporting application to generate reports from JMeter(Taurus), Locust and
 * Test run comparison
 * Performance regression alerts
 * Performance insights
-* [and more](https://jtlreporter.site/docs/introduction/features).
+* [and more](https://jtlreporter.com/docs/introduction/features).
 
 ## Used By
 <img src="/assets/Logo-RedHat-A-Color-RGB.svg"  width="200" height="150">
@@ -35,7 +35,7 @@ Online reporting application to generate reports from JMeter(Taurus), Locust and
   ```
   
 ## Documentation 📖
-For additional information please refer to the [documentation](https://jtlreporter.site/docs/).
+For additional information please refer to the [documentation](https://jtlreporter.com/docs/).
 
 ## Analytics 
 Currently, the following metrics are collected:
