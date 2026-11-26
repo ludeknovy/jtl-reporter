@@ -19,5 +19,5 @@ We release patches for security vulnerabilities.
 ## Reporting a Vulnerability
 
 Please report (suspected) security vulnerabilities to
-**[ludek@jtlreporter.site](mailto:ludek@jtlreporter.site)**. If the issue is confirmed, we will release a patch as soon
+**[ludek@jtlreporter.com](mailto:ludek@jtlreporter.com)**. If the issue is confirmed, we will release a patch as soon
 as possible depending on complexity.
