@@ -1,4 +1,4 @@
-#version: '2.1'
+version: '2.1'
 
 ## !!! Warning if you are upgrading from v4 !!!
 ## Please make sure you back up your data before the upgrade.
@@ -9,7 +9,7 @@
 
 services:
   fe:
-    image: novyl/jtl-reporter-fe
+    image: novyl/jtl-reporter-fe:v5.0.2
     ports:
       - "2020:80"
     depends_on:
@@ -22,7 +22,7 @@ services:
       context: ./db/
       dockerfile: Dockerfile
     volumes:
-      - ./data/jtl_reporter_v5:/data
+      - ./data/jtl_reporter_v5:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U postgres"]
       interval: 10s
@@ -35,7 +35,7 @@ services:
 
 
   be:
-    image: novyl/jtl-reporter-be
+    image: novyl/jtl-reporter-be:v5.0.2
     ports:
       - "5000:5000"
     environment:
@@ -44,7 +44,7 @@ services:
       - JWT_TOKEN_LOGIN=GdK6TrCvX7rJRZJVg4ijt  # please change this token, the same must be used for listener service
 
   migration:
-    image: novyl/jtl-reporter-be
+    image: novyl/jtl-reporter-be:v5.0.2
     environment:
       - DATABASE_URL=postgres://postgres@db/jtl_report
       - OPT_OUT_ANALYTICS=true
@@ -54,7 +54,7 @@ services:
         condition: service_healthy
 
   listener:
-    image: novyl/jtl-reporter-listener-service
+    image: novyl/jtl-reporter-listener-service:v2.1.2
     ports:
       - "6000:6000"
     environment:
